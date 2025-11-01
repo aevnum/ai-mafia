@@ -1,0 +1,19 @@
+{
+  "games_played": 1,
+  "games_won": 0,
+  "games_lost": 1,
+  "times_as_mafia": 1,
+  "times_as_villager": 0,
+  "successful_strategies": [],
+  "failed_strategies": [
+    {
+      "role": "mafia",
+      "strategy": "As mafia: Deflect aggressively by accusing others first, create chaos to hide",
+      "learned": "Lost as mafia. Was I too obvious? Spoke 10 times. Need to blend better."
+    }
+  ],
+  "lessons_learned": [
+    "Lost as mafia. Was I too obvious? Spoke 10 times. Need to blend better."
+  ],
+  "behavior_notes": ""
+}

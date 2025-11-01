@@ -1,0 +1,2 @@
+# This directory stores persistent agent scratchpads
+# Each agent has their own JSON file that persists across games

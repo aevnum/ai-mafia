@@ -1,0 +1,412 @@
+================================================================================
+AI MAFIA GAME TRANSCRIPT
+================================================================================
+Generated: 2025-11-01 19:31:17
+Players: 8 (2 Mafia)
+
+PLAYERS:
+--------------------------------------------------------------------------------
+🔵 Yatharth - VILLAGER - Messages: 14
+🔵 Anushka - VILLAGER (ELIMINATED) - Messages: 3
+🔵 Kshitij - VILLAGER - Messages: 12
+🔵 Khushi - VILLAGER - Messages: 14
+🔵 Jay - VILLAGER (ELIMINATED) - Messages: 6
+🔴 Aryan - MAFIA (ELIMINATED) - Messages: 10
+🔴 Laavanya - MAFIA (ELIMINATED) - Messages: 13
+🔵 Navya - VILLAGER - Messages: 14
+
+CONVERSATION:
+================================================================================
+
+[SYSTEM] Game started! 8 players, 2 mafia among us. Players: Yatharth, Anushka, Kshitij, Khushi, Jay, Aryan, Laavanya, Navya
+
+Yatharth (VILLAGER):
+  Wait, wait, wait. Aryan, you're saying you were *observing* Anika last night? What exactly were you observing, and why didn't you say something sooner if you saw something suspicious?
+
+Anushka (VILLAGER):
+  Yatharth, why are you so quick to jump on Aryan for *observing*? It sounds like you're trying to make him look bad, but I'm feeling a weird vibe from *you* right now. What are *you* hiding, Yatharth?
+
+Laavanya (MAFIA):
+  Yatharth, your defensiveness is quite telling. It's not about Aryan observing, it's about *why* you felt the need to interrogate him so fiercely. Perhaps you're trying to divert attention from your own actions last night.
+
+Jay (VILLAGER):
+  Yatharth, your immediate interrogation of Anushka's observation is an attempt to deflect. Laavanya is correct; your intensity suggests you have something to hide regarding last night's events.
+
+Aryan (MAFIA):
+  Yatharth, you're the one with the "weird vibe," not me! Your constant badgering of Anushka and now me is clearly a desperate attempt to cover your own tracks. What were *you* really doing last night, Yatharth, and who are you trying to protect?
+
+Kshitij (VILLAGER):
+  Laavanya and Jay, you're both pointing fingers at Yatharth for his interrogation of Aryan, but it's Aryan's *own* statement about "observing" Anushka that feels far more cagey to me. Yatharth's questions, while intense, were direct inquiries into something that sounded unusual.
+
+Khushi (VILLAGER):
+  Yatharth, your sudden need to dissect Aryan's "observation" is more suspicious than Aryan's entire night; you're painting a target on him to distract from the very real question of what *you* were doing while we all slept. And Anushka, your defense of Aryan feels less like genuine observation and more like a desperate attempt to shift the spotlight before it burns you too.
+
+Navya (VILLAGER):
+  Anushka, your defense of Aryan feels a bit too eager given that Kshitij pointed out his statement was the cagey one; are you trying to protect him, or yourself? And Khushi, questioning my motives while defending Aryan seems like a desperate deflection.
+
+Laavanya (MAFIA):
+  Yatharth's insistence on dissecting Aryan's actions is a distraction; his fervent defense of himself only amplifies my suspicion towards him.
+
+Aryan (MAFIA):
+  Yatharth, your panicked accusations are screaming GUILTY! You're trying to make ME look like the bad guy because you're terrified someone will find out what *you* were up to last night.
+
+Kshitij (VILLAGER):
+  Laavanya, your focus on Yatharth's defensiveness feels like you're trying to frame him, but it's Aryan's persistent deflection from the "observation" that truly raises a red flag for me; let's not get sidetracked by Yatharth's questions when Aryan's initial statement was so vague.
+
+Yatharth (VILLAGER):
+  Laavanya, you call *my* intensity suspicious, but Aryan's panicked accusations and Khushi's insistence that *I'm* the one distracting are far more telling. Who are they actually trying to protect by throwing me under the bus so aggressively?
+
+Anushka (VILLAGER):
+  Khushi and Navya, you're BOTH saying I'm defending Aryan too much, but *you* are the ones who immediately jumped on him! Yatharth's panic is deafening, and Aryan's weird "observation" of me still feels off, but something isn't adding up with Khushi and Navya's quick accusations towards *me*!
+
+Navya (VILLAGER):
+  Anushka, you claim Khushi and I jumped on Aryan, but *you* were the one defending his "observation" most fiercely after Kshitij highlighted it as cagey; who are you truly trying to protect? And Yatharth, you're calling others panicked, but your insistence on deflecting from Khushi's pointed question about *your* night feels just as desperate.
+
+Jay (VILLAGER):
+  Yatharth, your statement that Khushi and Navya are throwing you under the bus is inconsistent with their claims that *you* are deflecting. Aryan, your persistent deflection from Kshitij's critique of your vague "observation" is a pattern I'm tracking closely.
+
+Khushi (VILLAGER):
+  Laavanya, claiming Yatharth is distracting while Aryan *deflects* from Kshitij's critique is a peculiar kind of framing! Are we trying to paint a target on Yatharth's back to shield someone else from the spotlight, or is this just a creative misdirection?
+
+Khushi (VILLAGER):
+  Laavanya, your claim that Yatharth is distracting while Aryan is deflecting from Kshitij's critique is a beautifully woven tapestry of misdirection! Are we admiring the art, or trying to hide the artist?
+
+Yatharth (VILLAGER):
+  Kshitij, you say Laavanya is framing me, but you also point out Aryan's deflection, yet you *don't* directly question Aryan's vague "observation" when it's clearly suspect. What are you truly seeing, or what are you choosing to ignore?
+
+Aryan (MAFIA):
+  This whole game is a mess! Kshitij, you're so busy trying to analyze Laavanya and Yatharth, but you're completely missing the obvious deflection from Aryan. And Jay, you're tracking *my* deflection? I'm the one trying to figure out who's actually playing games here, not hiding behind vague critiques!
+
+Anushka (VILLAGER):
+  Jay, you're tracking Aryan's deflection but ignoring the fact that Khushi and Navya are the ones immediately pointing fingers at *me*! It feels like a HUGE distraction from what *they're* hiding!
+
+Laavanya (MAFIA):
+  The focus on Aryan's observation is a distraction. Khushi and Navya's immediate targeting of Anushka feels… rehearsed.
+
+Kshitij (VILLAGER):
+  Anushka, your defense of Aryan's "observation" is what *I* highlighted as cagey, and now you're accusing Khushi and Navya of distraction – that feels like a rather convenient flip! Jay, your observation that Aryan is deflecting is spot on, but your own pointed questioning of Yatharth feels a bit like you're trying to redirect attention from that very deflection, doesn't it?
+
+Navya (VILLAGER):
+  Anushka, why are you immediately defending Aryan and accusing Khushi and Navya of distraction when Kshitij *already* pointed out Aryan's cagey behavior? Laavanya, you say the focus on Aryan is a distraction, but then you bring up Khushi and Navya's targeting of Anushka, which feels like you're just adding to the noise.
+
+Jay (VILLAGER):
+  Khushi, your initial framing of Laavanya's statement about Yatharth and Aryan, followed by Yatharth questioning Kshitij's silence on Aryan, and then Aryan accusing me of deflection while deflecting himself, creates a convoluted narrative I need to dissect. Laavanya, your assertion that the focus on Aryan is a distraction, and then you highlight Khushi and Navya targeting Anushka, feels like a deliberate attempt to shift suspicion away from the initial deflection sequence.
+
+
+[SYSTEM] 🗳️ VOTING TIME! After 20 messages, it's time to vote someone out!
+
+
+[SYSTEM] 🗳️ Yatharth voted for Kshitij. Reason: Kshitij is pointing fingers at multiple people while deflecting from his own potentially suspect observations and questions.
+
+
+[SYSTEM] 🗳️ Anushka voted for Aryan. Reason: Aryan is deflecting from the conversation by accusing others of deflection and creating a convoluted narrative when he is the one being questioned.
+
+
+[SYSTEM] 🗳️ Kshitij voted for Aryan. Reason: Aryan's insistence that I'm missing an "obvious deflection" while simultaneously being accused of deflection himself makes his commentary highly suspect.
+
+
+[SYSTEM] 🗳️ Khushi voted for Anushka. Reason: Anushka is deflecting suspicion by accusing Khushi and Navya of distraction when they are simply responding to the conversation.
+
+
+[SYSTEM] 🗳️ Jay voted for Anushka. Reason: Anushka's aggressive redirection of blame towards Khushi and Navya, while defending Aryan, feels like a calculated attempt to obscure her own involvement or knowledge.
+
+
+[SYSTEM] 🗳️ Aryan voted for Anushka. Reason: Anushka's immediate defense of Aryan and accusations of distraction feel like a coordinated attempt to divert attention from Aryan's own suspicious behavior.
+
+
+[SYSTEM] 🗳️ Laavanya voted for Anushka. Reason: Your immediate defense of Aryan and accusations of distraction feel like you're trying too hard to steer the conversation away from his initial deflection.
+
+
+[SYSTEM] 🗳️ Navya voted for Aryan. Reason: Aryan is deflecting by accusing Jay of deflection, and his cagey behavior was already noted by Kshitij.
+
+
+[SYSTEM] 📊 Voting Results: Kshitij: 1 votes, Aryan: 3 votes, Anushka: 4 votes
+
+
+[SYSTEM] ❌ Anushka has been eliminated! They were a VILLAGER.
+
+
+[SYSTEM] 💬 New discussion round begins! Remaining players: Yatharth, Kshitij, Khushi, Jay, Aryan, Laavanya, Navya
+
+Yatharth (VILLAGER):
+  Hold on a minute. Anushka, you say you were with Jay, but Aryan was quiet for a long time. What exactly was Jay doing while you were supposedly "with" him, and why wasn't Aryan talking?  This whole narrative feels a bit too neat, doesn't it?
+
+Aryan (MAFIA):
+  Hold on a minute, Yatharth, you're pointing fingers, but *you're* the one weaving this convoluted story about me being "quiet." What were *you* doing while everyone else was talking? Maybe you're just trying to distract from your own suspicious silence!
+
+Navya (VILLAGER):
+  Yatharth, your questioning of Anushka's story about Jay and Aryan seems to overlook that you yourself were quiet, and now you're deflecting by accusing Aryan of the same thing. Aryan, your immediate counter-accusation towards Yatharth feels very defensive and shifts focus, which is concerning.
+
+Khushi (VILLAGER):
+  Navya, your analysis of Yatharth and Aryan is a beautifully crafted diversion, but you missed the glaring contradiction: Yatharth asked about Jay's actions, and you completely sidestepped that, focusing only on *who* was quiet.
+
+Laavanya (MAFIA):
+  Jay's silence is indeed curious, especially after Yatharth's initial probing. I find myself questioning his choices in that moment.
+
+Kshitij (VILLAGER):
+  Anushka and Jay, your alibis seem a little too perfectly aligned given Aryan’s supposed silence; let's hear more about what exactly transpired between the two of you and why Aryan wasn't contributing to the discussion.
+
+Jay (VILLAGER):
+  Yatharth, your focus on Aryan's silence and Jay's actions, while Anushka claims they were together, is a valid point of inquiry that Khushi has rightly identified as being sidestepped by Navya. Navya, your analysis of Yatharth and Aryan feels like a deliberate misdirection, avoiding the core question about Jay's activity during that claimed shared time.
+
+Laavanya (MAFIA):
+  The tangled web of accusations between Yatharth and Aryan is certainly diverting. While they argue, I'm more concerned about Jay's deliberate reticence when directly questioned.
+
+Khushi (VILLAGER):
+  Jay, your elaborate explanation of Navya's "misdirection" is a masterpiece of deflection, but you haven't explained *your own* silence when Yatharth asked about you. Laavanya, your focus on Jay's reticence is astute, but let's not forget Aryan's sudden defensive outburst when Yatharth merely pointed out his quietness – that's a red flag waving like a freshly baked roti!
+
+Jay (VILLAGER):
+  Khushi, your observation that I haven't explained my own silence, while I've focused on Navya's misdirection, is a valid point, and I will address it. However, your immediate pivot to Aryan's "defensive outburst" feels like an attempt to shift focus from the core inconsistencies regarding Jay's claimed shared time with Anushka.
+
+Yatharth (VILLAGER):
+  Anushka and Jay, your alibis are *too* convenient, and Aryan, your defensiveness about your silence is *exactly* what I'd expect from someone trying to hide something. Navya, your analysis of me and Aryan, while calling Khushi's observation a "diversion," seems like you're trying to steer us away from Jay's silence altogether.
+
+Navya (VILLAGER):
+  Khushi, you are correct to point out Jay's silence, but your rapid pivot to Aryan's defensiveness feels like you're trying to distract from the fact that Jay *still* hasn't explained his actions when Yatharth specifically asked about him.
+
+Aryan (MAFIA):
+  **Aryan:** You're all so busy pointing fingers at each other, it's pathetic! Laavanya, your "concern" for Jay is laughable when he's clearly hiding something. And Kshitij, don't even get me started on your "perfectly aligned" alibis, you're trying to set up Anushka and Jay, aren't you? I say we focus on the real threats, like Yatharth and his constant badgering!
+
+Kshitij (VILLAGER):
+  Aryan, your outburst is precisely the kind of defensive bluster we expect from the Mafia when cornered, especially when you lash out at Yatharth and try to paint Anushka and Jay as the culprits instead of addressing your own lack of engagement.
+
+Laavanya (MAFIA):
+  Aryan's outburst is certainly… loud. He directs blame at Yatharth and Kshitij, while deflecting from his own quietude. It's almost as if he's trying to ensure *someone else* is under the microscope instead of himself.
+
+Navya (VILLAGER):
+  Yatharth, you accuse Anushka and Jay of convenient alibis, yet you and Aryan are the ones who have been the most vocal in deflecting and accusing others without concrete proof.
+
+Yatharth (VILLAGER):
+  Navya, you claim Aryan and I are deflecting, yet you're the one trying to paint *us* as the problem while Jay *still* hasn't explained his silence when I directly asked him. What are you so afraid of me uncovering about Jay?
+
+Aryan (MAFIA):
+  This is ridiculous! You're all running around like headless chickens, trying to pin this on me when Jay is the one dodging questions! And Navya, stop trying to pull the wool over everyone's eyes with your fake analysis; your "concern" for Jay is as transparent as Anushka's "convenient" alibi!
+
+Jay (VILLAGER):
+  Navya, your assertion that Aryan and Yatharth are deflecting while simultaneously demanding an explanation from Jay, who has been silent, is a logical inconsistency. Aryan, your aggressive deflection and shifting accusations towards Yatharth and Kshitij, instead of addressing your own lack of engagement, raises significant suspicion.
+
+Khushi (VILLAGER):
+  Jay, your "logical inconsistency" observation about Navya is a smokescreen! You're the one who's been a black hole of information, and suddenly you're dissecting *Navya's* logic? That's a bold maneuver, almost too bold.
+
+
+[SYSTEM] 🗳️ VOTING TIME! After 20 messages, it's time to vote someone out!
+
+
+[SYSTEM] 🗳️ Yatharth voted for Jay. Reason: Jay's sudden participation, dissecting others' logic after prolonged silence and the focus on his lack of explanation, makes him the most suspicious.
+
+
+[SYSTEM] 🗳️ Kshitij voted for Jay. Reason: Jay's sudden, detailed analysis of Navya's statement, after remaining silent, is a very suspicious attempt to deflect attention from himself.
+
+
+[SYSTEM] 🗳️ Khushi voted for Jay. Reason: Jay's sudden attempt to analyze Navya's logic feels like a desperate deflection from his own prolonged silence and lack of contribution.
+
+
+[SYSTEM] 🗳️ Jay voted for Khushi. Reason: Khushi's immediate accusation that my logical observation is a smokescreen and calling me a "black hole of information" is a strong deflection attempt and a way to put suspicion on me instead of the people I pointed out.
+
+
+[SYSTEM] 🗳️ Aryan voted for Jay. Reason: Jay's sudden focus on logical inconsistencies and his own silence when directly questioned makes him the most suspicious player at the moment.
+
+
+[SYSTEM] 🗳️ Laavanya voted for Jay. Reason: Jay's sudden focus on logical inconsistencies and his own silence makes him a prime suspect trying to deflect attention.
+
+
+[SYSTEM] 🗳️ Navya voted for Jay. Reason: Jay's attempt to highlight a "logical inconsistency" in my statement feels like a tactic to deflect from his own silence and direct suspicion away from himself.
+
+
+[SYSTEM] 📊 Voting Results: Jay: 6 votes, Khushi: 1 votes
+
+
+[SYSTEM] ❌ Jay has been eliminated! They were a VILLAGER.
+
+
+[SYSTEM] 💬 New discussion round begins! Remaining players: Yatharth, Kshitij, Khushi, Aryan, Laavanya, Navya
+
+Navya (VILLAGER):
+  Jay, you're awfully quick to dismiss Anushka's point; what exactly are you trying to hide by shutting down the conversation so fast? And Kshitij, your silence when Laavanya was being questioned is starting to look very suspicious to me.
+
+Yatharth (VILLAGER):
+  Navya, why are you focusing on Jay and Kshitij? What are *you* trying to distract us from by pointing fingers instead of analyzing the actual evidence presented so far?
+
+Laavanya (MAFIA):
+  Navya's focus on Jay and Kshitij is indeed a curious diversion. Yatharth, you're right to question that. Perhaps Jay and Kshitij are simply being observant, and Navya's eagerness to point fingers is a tactic to shift attention from herself.
+
+Khushi (VILLAGER):
+  Navya, your sudden laser focus on Jay and Kshitij feels less like investigation and more like a meticulously crafted smoke screen, especially when Yatharth is already questioning your motives. Laavanya, your immediate agreement with Yatharth's distraction theory is also quite... convenient.
+
+Aryan (MAFIA):
+  This is a damn circus! Navya's got everyone tangled up in her own BS, trying to pin everything on Jay and Kshitij. And Laavanya and Khushi are just eating it up, looking for any excuse to point fingers. Honestly, Yatharth, you're the only one with any sense here, seeing through this nonsense.
+
+Kshitij (VILLAGER):
+  Navya, your quick accusations against Jay and Kshitij, coupled with Laavanya and Khushi's immediate validation, are creating a very suspicious echo chamber; Aryan, your strong defense of Yatharth also seems to be solidifying a bloc, which is concerning.
+
+Yatharth (VILLAGER):
+  Aryan, you're calling it a circus and saying I'm the only one with sense, but then you jump in to defend me so strongly? Why the sudden alliance, Aryan, and what are you hoping to achieve by solidifying a bloc with me so early?
+
+Khushi (VILLAGER):
+  Aryan, your fervent defense of Yatharth, calling him the *only* one with sense, feels like a poorly disguised attempt to build a shield, and Laavanya, your agreement with Yatharth is just as suspect as Navya's initial pointing.
+
+Laavanya (MAFIA):
+  Navya's insistent focus on Jay and Kshitij is precisely what I would expect from someone trying to control the narrative. Yatharth, your observation is astute.
+
+Navya (VILLAGER):
+  Yatharth, you claim I'm distracting by focusing on Jay and Kshitij, yet you and Laavanya immediately jump on that, while Khushi calls my focus a "smoke screen."Aryan, you're now calling me "BS" and defending Yatharth, but Kshitij pointed out your own "bloc" with Yatharth is concerning.
+
+Aryan (MAFIA):
+  This whole game is a joke, and Navya is leading the charge with her fake accusations! Kshitij, you calling out my defense of Yatharth is rich coming from someone who's just going along with Khushi and Laavanya's nonsense.
+
+Kshitij (VILLAGER):
+  Navya, your constant deflection from your own accusations by pointing out others' reactions is a classic tactic; I'm more concerned about your persistent targeting of Jay and Kshitij than any perceived "blocs" you're trying to inflate. Aryan, your aggressive defense of Yatharth is as loud as Navya's accusations, and frankly, equally suspicious.
+
+Yatharth (VILLAGER):
+  Aryan, you're calling Navya's accusations "BS" and then immediately demanding I see through her, but you're also the one Kshitij warns me about for forming a "bloc" with me. What exactly are you trying to shield, Aryan, and from whom?
+
+Aryan (MAFIA):
+  Navya, your constant babbling about "blocs" is a transparent attempt to distract everyone while you manipulate the narrative, and Kshitij, you're just as bad, blindly following Khushi and Laavanya's lead to stir up trouble!
+
+Kshitij (VILLAGER):
+  Navya, your repeated deflection about "blocs" is a smoke screen, and Aryan, your over-the-top defense of Yatharth, while simultaneously accusing Navya, is a very loud contradiction you need to explain.
+
+Khushi (VILLAGER):
+  Yatharth, your sudden pivot to questioning Aryan's motives after Aryan defended you so vehemently is a strategic sidestep that reeks of a coordinated play; let's see if your newfound suspicion is genuine or another layer to your creative storytelling, Aryan.
+
+Navya (VILLAGER):
+  Khushi, you're calling Yatharth's pivot a "strategic sidestep" after Aryan so aggressively defended him, yet you're not questioning Aryan's own contradictory defense of Yatharth while also accusing me.
+
+Laavanya (MAFIA):
+  Navya's fixation on "blocs" is a clear attempt to redirect attention. I've been watching Yatharth's responses closely; his sudden questioning of Aryan is what truly raises a flag for me.
+
+Navya (VILLAGER):
+  Laavanya, you say Navya's fixation on "blocs" is a distraction, yet you agree with Khushi that Yatharth's pivot is suspicious after Aryan defended him? That sounds like you're defending Aryan's actions by focusing on Yatharth instead.
+
+Khushi (VILLAGER):
+  Navya, you're deflecting like a hummingbird on caffeine; if you're so sure of my "creative storytelling," why are you laser-focused on twisting my words instead of addressing the glaring contradictions between Aryan's defense of Yatharth and his accusations against you?
+
+Aryan (MAFIA):
+  Kshitij, you're calling *my* defense of Yatharth contradictory while you're blindly ganging up with Khushi and Laavanya, trying to make *me* the villain to cover for your own suspicious silence!
+
+Yatharth (VILLAGER):
+  Aryan, you claim Kshitij is ganging up with Khushi and Laavanya, but Kshitij's statement actually pointed out *your* contradiction in defending me while accusing Navya. What exactly is your intention there?
+
+
+[SYSTEM] 🗳️ VOTING TIME! After 20 messages, it's time to vote someone out!
+
+
+[SYSTEM] 🗳️ Yatharth voted for Aryan. Reason: Aryan's defense of me is contradictory to his accusations against Navya, and his aggressive tone and attempts to shift blame are suspicious.
+
+
+[SYSTEM] 🗳️ Kshitij voted for Aryan. Reason: Aryan's contradictory behavior of defending Yatharth while simultaneously accusing Navya, coupled with his aggressive deflection when questioned, makes him the most suspicious.
+
+
+[SYSTEM] 🗳️ Khushi voted for Aryan. Reason: Aryan's aggressive defense of himself and his attempts to deflect blame onto others, particularly Kshitij, make him the most suspicious player so far.
+
+
+[SYSTEM] 🗳️ Aryan voted for Yatharth. Reason: You are actively questioning my own motives and trying to frame my actions as contradictory, which is a clear attempt to deflect from yourself.
+
+
+[SYSTEM] 🗳️ Laavanya voted for Aryan. Reason: Aryan's defensive accusations against Kshitij and his attempt to paint Khushi and Laavanya as a united front against him, while also deflecting from his own contradictory behavior regarding Yatharth, make him the most suspicious candidate.
+
+
+[SYSTEM] 🗳️ Navya voted for Aryan. Reason: Aryan is deflecting by accusing others of ganging up, while his own defense of Yatharth and accusations against me seem contradictory and designed to shift focus.
+
+
+[SYSTEM] 📊 Voting Results: Aryan: 5 votes, Yatharth: 1 votes
+
+
+[SYSTEM] ❌ Aryan has been eliminated! They were a MAFIA member.
+
+
+[SYSTEM] 💬 New discussion round begins! Remaining players: Yatharth, Kshitij, Khushi, Laavanya, Navya
+
+Khushi (VILLAGER):
+  Laavanya's sudden silence after Anushka's outburst is a neon sign; tell me, Laavanya, what are you *really* hiding behind that stoic facade?
+
+Yatharth (VILLAGER):
+  Laavanya, Khushi's pointing the finger at your silence is a distraction. What exactly was Anushka's outburst about that made you clam up, and why is Khushi so eager to pin something on you instead of exploring Anushka's initial outburst directly?
+
+Kshitij (VILLAGER):
+  Khushi, your focus on Laavanya's silence feels like a deliberate attempt to steer us away from Anushka's initial outburst. Yatharth, I agree with your assessment; Khushi's eagerness to point fingers at Laavanya instead of dissecting Anushka's behavior is highly suspicious.
+
+Laavanya (MAFIA):
+  Khushi's insistence on my silence is a well-placed misdirection. Yatharth and Kshitij are correct to question her focus; I'm more concerned about Jay's uncharacteristic quietness throughout this entire discussion.
+
+Navya (VILLAGER):
+  Khushi, your eagerness to focus on Laavanya's silence after Anushka's outburst is highly suspicious; why are you deflecting from Anushka's initial outburst by targeting Laavanya instead? Yatharth and Kshitij are right to question your motives.
+
+Kshitij (VILLAGER):
+  Navya, your agreement with Yatharth and myself about Khushi's deflection is noted, but your own focus on Khushi now seems to echo her earlier tactic, potentially diverting attention from Jay's peculiar quietness.
+
+Khushi (VILLAGER):
+  Kshitij, your convoluted logic about my focus mirroring Navya's, which is mirroring mine, is a dizzying dance designed to obscure Jay's conspicuous stillness; you're trying to weave a web, but I see the silken threads leading straight to the quietest spider!
+
+Laavanya (MAFIA):
+  Khushi’s frantic attempts to weave a narrative around me are quite telling. Frankly, her insistence on my silence while ignoring Jay's persistent quiet is a distraction I won't entertain.
+
+Navya (VILLAGER):
+  Jay, your silence is too convenient when everyone else is talking; are you waiting for someone to defend you, or are you hoping we'll forget you're even here?
+
+Yatharth (VILLAGER):
+  Jay, your silence is louder than Anushka's outburst, and Khushi's frantic accusations against Laavanya are a flimsy shield; who benefits from us looking anywhere but at *you*?
+
+Laavanya (MAFIA):
+  Yatharth's focus on Jay's silence is astute, but Navya's sudden pivot towards Jay feels like a desperate attempt to shift focus, just as Khushi did with me earlier.
+
+Kshitij (VILLAGER):
+  Yatharth and Navya, your shared focus on Jay's silence is striking, but I'm still trying to reconcile Khushi's earlier, almost desperate, attempts to paint Laavanya as the culprit. Khushi, your fervor in diverting us from Jay feels like you're overcompensating for something.
+
+Khushi (VILLAGER):
+  Laavanya, your claim that *my* narrative is frantic, while you "won't entertain" Jay's silence, is a spectacular piece of deflection; are you perhaps trying to *become* the quiet one by shouting about my supposed franticness?
+
+Yatharth (VILLAGER):
+  Jay, your silence is a loud statement, but Navya's sudden spotlight on you after Khushi's accusations against Laavanya is equally suspicious; are you all coordinating this distraction?
+
+Navya (VILLAGER):
+  Laavanya, you say you won't entertain Jay's silence, yet you just brought it up again, and now you're accusing me of deflecting. That doesn't make sense.
+
+Khushi (VILLAGER):
+  Laavanya, you claim my narrative is frantic, yet you're weaving your own, pointing fingers at me while conveniently ignoring how *you* just echoed Yatharth's focus on Jay's silence! Are you trying to get us all to dance to your tune?
+
+Navya (VILLAGER):
+  Laavanya, you're accusing me of deflecting by bringing up Jay's silence, but *you* were the one who just brought it up again while also accusing me. That's a complete contradiction, and frankly, it smells like a desperate attempt to create confusion.
+
+Yatharth (VILLAGER):
+  Laavanya, you claim to "won't entertain" Jay's silence, yet you keep bringing *him* up while accusing *me* of deflection. That's not analysis, that's a tangled web to hide in, and I'm not buying it.
+
+Laavanya (MAFIA):
+  Anushka and Aryan have been uncharacteristically quiet. Jay's silence, while noted by many, is a convenient shield for those who truly wish to operate unseen.
+
+Kshitij (VILLAGER):
+  Laavanya, your claim that Jay's silence is a "convenient shield" while you yourself are desperately trying to shift focus from his stillness to Anushka and Aryan's quietness is a fascinating, yet transparent, attempt to spin the narrative.
+
+
+[SYSTEM] 🗳️ VOTING TIME! After 20 messages, it's time to vote someone out!
+
+
+[SYSTEM] 🗳️ Yatharth voted for Laavanya. Reason: Laavanya is consistently deflecting by accusing others of deflection and is trying to shift focus from Jay's silence to other quiet players.
+
+
+[SYSTEM] 🗳️ Kshitij voted for Laavanya. Reason: Laavanya is actively deflecting by bringing up Anushka and Aryan's quietness while simultaneously accusing others of creating distractions, which suggests she's trying to hide something.
+
+
+[SYSTEM] 🗳️ Khushi voted for Laavanya. Reason: Laavanya is deflecting attention from Jay and creating confusion by focusing on Anushka and Aryan's silence, while also accusing others of similar tactics.
+
+
+[SYSTEM] 🗳️ Laavanya voted for Khushi. Reason: Khushi's accusation that I'm weaving my own narrative while echoing Yatharth's focus on Jay's silence is a mischaracterization, as I explicitly stated Jay's silence is a shield for others.
+
+
+[SYSTEM] 🗳️ Navya voted for Laavanya. Reason: Laavanya is the only one who has consistently brought up Jay's silence, and her attempts to deflect the conversation to Anushka and Aryan's quietness seem like a tactic to hide something.
+
+
+[SYSTEM] 📊 Voting Results: Laavanya: 4 votes, Khushi: 1 votes
+
+
+[SYSTEM] ❌ Laavanya has been eliminated! They were a MAFIA member.
+
+
+[SYSTEM] 🎉 VILLAGERS WIN! All mafia have been eliminated!
+
+
+[SYSTEM] Game stopped.
+
+================================================================================
+END OF TRANSCRIPT
+================================================================================

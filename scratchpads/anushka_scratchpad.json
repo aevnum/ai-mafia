@@ -1,0 +1,19 @@
+{
+  "games_played": 1,
+  "games_won": 1,
+  "games_lost": 0,
+  "times_as_mafia": 0,
+  "times_as_villager": 1,
+  "successful_strategies": [
+    {
+      "role": "villager",
+      "strategy": "As villager: Voice suspicions immediately, trust gut feelings, pressure suspects",
+      "learned": "Won as villager! My deduction worked. Spoke 3 times. Keep questioning."
+    }
+  ],
+  "failed_strategies": [],
+  "lessons_learned": [
+    "Won as villager! My deduction worked. Spoke 3 times. Keep questioning."
+  ],
+  "behavior_notes": ""
+}

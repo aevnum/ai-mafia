@@ -4,7 +4,7 @@
 import streamlit as st
 import time
 from game_engine import MafiaGame
-from config import API_PROVIDER, DEFAULT_NUM_AGENTS, DEFAULT_NUM_MAFIA
+from config import API_PROVIDER, DEFAULT_NUM_AGENTS, DEFAULT_NUM_MAFIA, MAX_AGENTS
 
 # Page config
 st.set_page_config(
@@ -110,7 +110,7 @@ with st.sidebar:
     st.divider()
     
     # Game settings
-    num_agents = st.slider("Number of Agents", 3, 10, DEFAULT_NUM_AGENTS)
+    num_agents = st.slider("Number of Agents", 3, MAX_AGENTS, DEFAULT_NUM_AGENTS)
     num_mafia = st.slider("Number of Mafia", 1, min(3, num_agents-1), DEFAULT_NUM_MAFIA)
     
     st.divider()
@@ -154,6 +154,17 @@ with st.sidebar:
                 st.info("Game stopped.")
                 st.rerun()
     
+    st.divider()
+    
+    # Save transcript button
+    if st.session_state.game:
+        if st.button("💾 Save Transcript", use_container_width=True):
+            try:
+                filename = st.session_state.game.save_transcript()
+                st.success(f"✅ Transcript saved to: `{filename}`")
+            except Exception as e:
+                st.error(f"Error saving transcript: {e}")
+    
     # Info box
     st.divider()
     st.info("""
@@ -161,8 +172,9 @@ with st.sidebar:
     
     1. **Scheduler Module**: Decides *when* each agent should speak
     2. **Generator Module**: Decides *what* to say
-    3. Agents interrupt, stay silent, and adapt their behavior
-    4. Mafia agents become more talkative to deflect suspicion
+    3. **Personalities**: Each agent has unique traits and strategies
+    4. **Scratchpad Memory**: Agents learn from past games
+    5. Mafia agents are cunning deceivers, Villagers are analytical detectives
     """)
     
     # Display stats if game is running

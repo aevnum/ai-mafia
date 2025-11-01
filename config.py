@@ -32,3 +32,4 @@ DEFAULT_NUM_MAFIA = 2
 MIN_SPEAK_INTERVAL = 3  # Minimum seconds between agent messages
 CONVERSATION_CONTEXT_SIZE = 5  # Number of recent messages to consider
 VOTING_MESSAGE_THRESHOLD = 20  # Trigger voting after this many messages
+MAX_AGENTS = 8  # Maximum number of agents in a game

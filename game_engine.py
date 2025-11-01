@@ -36,8 +36,8 @@ class MafiaGame:
     def _initialize_agents(self):
         """Create agents with random role assignments"""
         agent_names = [
-            "Alice", "Bob", "Charlie", "Diana", "Eve", 
-            "Frank", "Grace", "Henry", "Iris", "Jack"
+            "Aryan", "Jay", "Kshitij", "Laavanya", 
+            "Anushka", "Navya", "Khushi", "Yatharth"
         ]
         
         # Shuffle and assign roles
@@ -203,10 +203,10 @@ class MafiaGame:
                 
                 if mafia_count == 0:
                     self.add_message("System", "🎉 VILLAGERS WIN! All mafia have been eliminated!", is_system=True)
-                    self.stop()
+                    self.stop(winner="villagers")
                 elif mafia_count >= villager_count:
                     self.add_message("System", "💀 MAFIA WINS! They equal or outnumber the villagers!", is_system=True)
-                    self.stop()
+                    self.stop(winner="mafia")
                 else:
                     # Continue game - announce new discussion round
                     remaining_agents = [a for a in self.agents if a.name not in self.eliminated_agents]
@@ -221,7 +221,7 @@ class MafiaGame:
         self.in_voting = False
     
     def conduct_voting(self) -> Dict[str, int]:
-        """Have each agent vote for someone to eliminate"""
+        """Have each agent vote for someone to eliminate, using scratchpad observations"""
         votes = {}
         active_agents = [a for a in self.agents if a.name not in self.eliminated_agents]
         
@@ -230,10 +230,16 @@ class MafiaGame:
             candidates = [a.name for a in active_agents if a.name != agent.name]
             conversation = self.get_conversation_snapshot()
             
+            # Get agent's observations from scratchpad for this game
+            observations = "\n".join([f"- {obs['observation']}" for obs in agent.current_game_observations[-5:]]) if agent.current_game_observations else "No observations recorded yet."
+            
             voting_prompt = f"""You are {agent.name}, a {agent.role} in a Mafia game.
 Based on the conversation so far, vote for ONE person to eliminate and explain why.
 
 Available candidates: {', '.join(candidates)}
+
+YOUR OBSERVATIONS THIS GAME:
+{observations}
 
 Recent conversation:
 {self._format_conversation(conversation[-10:])}
@@ -295,10 +301,32 @@ REASON: [your reasoning in one sentence]"""
         """Start the game"""
         self.is_running = True
     
-    def stop(self):
-        """Stop the game"""
+    def stop(self, winner: str = None):
+        """Stop the game and update agent scratchpads with learnings"""
         self.is_running = False
         self.add_message("System", "Game stopped.", is_system=True)
+        
+        # Update scratchpads for all agents based on game outcome
+        if winner:
+            for agent in self.agents:
+                won = (winner == "villagers" and agent.role == "villager") or (winner == "mafia" and agent.role == "mafia")
+                
+                # Generate strategy description based on role
+                if agent.role == "mafia":
+                    strategy_used = f"As mafia: {agent.personality.get('mafia_strategy', 'Standard mafia play')}"
+                    if won:
+                        what_learned = f"Won as mafia! My deceptive style worked. Spoke {agent.message_count} times. Keep being aggressive."
+                    else:
+                        what_learned = f"Lost as mafia. Was I too obvious? Spoke {agent.message_count} times. Need to blend better."
+                else:
+                    strategy_used = f"As villager: {agent.personality.get('villager_strategy', 'Standard villager play')}"
+                    if won:
+                        what_learned = f"Won as villager! My deduction worked. Spoke {agent.message_count} times. Keep questioning."
+                    else:
+                        what_learned = f"Lost as villager. Missed the mafia. Spoke {agent.message_count} times. Need better analysis."
+                
+                agent.update_strategy(won, agent.role, strategy_used, what_learned)
+
     
     def get_agent_states(self) -> List[Dict]:
         """Get current state of all agents"""
@@ -325,3 +353,59 @@ REASON: [your reasoning in one sentence]"""
                 for agent in self.agents
             }
         }
+    
+    def save_transcript(self, filename: str = None) -> str:
+        """Save game transcript to a text file"""
+        import datetime
+        import os
+        
+        # Create transcripts directory if it doesn't exist
+        os.makedirs("transcripts", exist_ok=True)
+        
+        # Generate filename if not provided
+        if not filename:
+            timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+            filename = f"transcripts/mafia_game_{timestamp}.txt"
+        
+        # Build transcript
+        transcript_lines = []
+        transcript_lines.append("="*80)
+        transcript_lines.append("AI MAFIA GAME TRANSCRIPT")
+        transcript_lines.append("="*80)
+        transcript_lines.append(f"Generated: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+        transcript_lines.append(f"Players: {self.num_agents} ({self.num_mafia} Mafia)")
+        transcript_lines.append("")
+        
+        # Add player list with roles
+        transcript_lines.append("PLAYERS:")
+        transcript_lines.append("-"*80)
+        for agent in self.agents:
+            role_emoji = "🔴" if agent.role == "mafia" else "🔵"
+            eliminated = " (ELIMINATED)" if agent.name in self.eliminated_agents else ""
+            transcript_lines.append(f"{role_emoji} {agent.name} - {agent.role.upper()}{eliminated} - Messages: {agent.message_count}")
+        transcript_lines.append("")
+        
+        # Add conversation
+        transcript_lines.append("CONVERSATION:")
+        transcript_lines.append("="*80)
+        for msg in self.conversation_history:
+            if msg.get('is_system'):
+                transcript_lines.append(f"\n[SYSTEM] {msg['content']}\n")
+            else:
+                # Find agent to get role
+                agent = next((a for a in self.agents if a.name == msg['agent']), None)
+                role_label = "(MAFIA)" if agent and agent.role == "mafia" else "(VILLAGER)"
+                transcript_lines.append(f"{msg['agent']} {role_label}:")
+                transcript_lines.append(f"  {msg['content']}")
+                transcript_lines.append("")
+        
+        transcript_lines.append("="*80)
+        transcript_lines.append("END OF TRANSCRIPT")
+        transcript_lines.append("="*80)
+        
+        # Write to file
+        transcript_text = "\n".join(transcript_lines)
+        with open(filename, 'w', encoding='utf-8') as f:
+            f.write(transcript_text)
+        
+        return filename
