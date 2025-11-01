@@ -11,6 +11,17 @@ from personalities import get_personality
 
 
 class Agent:
+
+    def _get_personality_rules(self) -> str:
+        """Get specific rules for this personality"""
+        traits = self.personality.get('traits', [])
+        rules = {
+            'aggressive': "- Be direct and confrontational\n- Make strong accusations\n- Use forceful language",
+            'analytical': "- Cite specific evidence (quote exact words)\n- Build logical arguments\n- Track patterns methodically",
+            'cautious': "- Speak less often\n- Only speak when you have strong evidence\n- Defend yourself carefully",
+            'charismatic': "- Build alliances naturally\n- Use persuasive language\n- Rally people to your side"
+        }
+        return "\n".join([rules.get(trait, "") for trait in traits if trait in rules])
     """
     AI Agent with two-part brain:
     - Scheduler: Decides WHEN to speak
@@ -235,6 +246,7 @@ Respond in 2-3 sentences describing your game plan:"""
 
     def create_prompt(self, conversation_history: List[Dict], vote_history: List[Dict] = None, context_reset_index: int = 0) -> str:
         """Creates structured prompt requiring evidence-based reasoning (NO example analysis text)"""
+
         # ✅ NEW: Only use conversation AFTER the last voting round
         if context_reset_index > 0:
             # Get only post-voting context
@@ -268,6 +280,8 @@ Respond in 2-3 sentences describing your game plan:"""
         if round_summary:
             summary_injection = f"\n{round_summary}\n\nBased on the elimination and will, what do we know now?\n"
 
+        personality_rules = self._get_personality_rules()
+
         if self.role == "mafia":
             strategy = self.personality.get("mafia_strategy", "")
             if is_game_start:
@@ -276,6 +290,9 @@ Respond in 2-3 sentences describing your game plan:"""
 
 PERSONALITY: {personality_desc}
 SPEAKING STYLE: {self.personality.get('speaking_style', '')}
+
+🎭 PERSONALITY RULES YOU MUST FOLLOW:
+{personality_rules}
 
 This is the START of the game. The opening hint was cryptic. Players are nervous.
 
@@ -323,6 +340,9 @@ CRITICAL RULES:
 - Cite SPECIFIC evidence from conversation above
 - Speak in FIRST PERSON ("I noticed..." not "Jay noticed...")
 
+🎭 PERSONALITY RULES YOU MUST FOLLOW:
+{personality_rules}
+
 Your formatted response:"""
         else:
             strategy = self.personality.get("villager_strategy", "")
@@ -332,6 +352,9 @@ Your formatted response:"""
 
 PERSONALITY: {personality_desc}
 SPEAKING STYLE: {self.personality.get('speaking_style', '')}
+
+🎭 PERSONALITY RULES YOU MUST FOLLOW:
+{personality_rules}
 
 This is the START of the game. The opening hint was cryptic. You need to find the mafia.
 

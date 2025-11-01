@@ -410,6 +410,10 @@ class MafiaGame:
 
             # ✅ ENFORCE structured voting response
             voting_prompt = f"""You are {agent.name}, a {agent.role} in a Mafia game.
+
+⚠️ CRITICAL: Do NOT just vote like others. Find YOUR OWN evidence.
+Think independently - what did YOU personally observe?
+
 Based on the conversation so far, vote for ONE person to eliminate.
 
 Available candidates: {', '.join(candidates)}
@@ -489,6 +493,15 @@ Your response:"""
             "votes": round_votes,
             "eliminated": None
         })
+
+        # Show who voted for whom (creates drama!)
+        vote_summary = "\n".join([
+            f"  • {v['voter']} → {v['target']}: {v['reason']}"
+            for v in round_votes
+        ])
+        self.add_message("System", 
+            f"📋 VOTE BREAKDOWN:\n{vote_summary}", 
+            is_system=True)
         return votes
     
     def _format_conversation(self, messages: List[Dict]) -> str:
@@ -506,25 +519,20 @@ Your response:"""
         
         will_prompt = f"""You are {eliminated_agent.name}, a VILLAGER who was just killed by the MAFIA.
 
-Before you die, you leave a cryptic will with a HINT about who killed you.
-Based on the conversation, who do you suspect? What was the MAFIA doing?
+    Before you die, you leave a cryptic will with a HINT about who killed you.
+    Based on the conversation, who do you suspect? What was the MAFIA doing?
 
-CRITICAL: Write in FIRST PERSON. Use "I saw...", "I noticed...", "I believe..."
-Example: "I saw the pattern in Jay's deflections" NOT "The pattern in Jay's deflections was clear"
+    CRITICAL: Write in FIRST PERSON. Use \"I saw...\", \"I noticed...\", \"I believe...\"
 
-Recent conversation:
-{recent_context}
+    Write EXACTLY ONE cryptic sentence (max 20 words) that hints at the mafia.
 
-Write a 1-sentence cryptic will that hints at the mafia members WITHOUT naming them directly.
-Use FIRST PERSON perspective in your will.
+    GOOD: \"I saw the pattern in how they deflected my discord question\"
+    BAD: Long paragraphs explaining everything
 
-Example formats:
-- "I noticed the one who asked about X was hiding something about Y"
-- "I watched the pattern in someone's speech - they're synchronizing with another"
-- "I felt the silence before a certain message was deafening"
-- "I counted the questions asked by those who should be answering"
+    Recent conversation:
+    {recent_context}
 
-Your will (ONE cryptic sentence in FIRST PERSON):"""
+    Your will (ONE SENTENCE, MAX 20 WORDS):"""
 
         try:
             time.sleep(2)  # Rate limit protection
