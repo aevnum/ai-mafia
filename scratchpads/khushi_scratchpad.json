@@ -1,8 +1,8 @@
 {
-  "games_played": 2,
-  "games_won": 2,
+  "games_played": 3,
+  "games_won": 3,
   "games_lost": 0,
-  "times_as_mafia": 0,
+  "times_as_mafia": 1,
   "times_as_villager": 2,
   "successful_strategies": [
     {
@@ -14,12 +14,18 @@
       "role": "villager",
       "strategy": "As villager: Try creative investigation methods, make bold accusations, think outside the box",
       "learned": "Won as villager! My deduction worked. Spoke 17 times. Keep questioning."
+    },
+    {
+      "role": "mafia",
+      "strategy": "Provoked chaotic reactions from others by initiating targeted and aggressive questioning, diverting attention from my own actions.",
+      "learned": "\u2705 WON as mafia: Creating a smokescreen of suspicion through creative accusations and questioning the motives of those who were vocal, effectively making myself seem like a dedicated investigator rather than a threat."
     }
   ],
   "failed_strategies": [],
   "lessons_learned": [
     "Won as villager! My deduction worked. Spoke 14 times. Keep questioning.",
-    "Won as villager! My deduction worked. Spoke 17 times. Keep questioning."
+    "Won as villager! My deduction worked. Spoke 17 times. Keep questioning.",
+    "\u2705 WON as mafia: Creating a smokescreen of suspicion through creative accusations and questioning the motives of those who were vocal, effectively making myself seem like a dedicated investigator rather than a threat."
   ],
   "behavior_notes": ""
 }

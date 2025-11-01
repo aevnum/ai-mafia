@@ -1,8 +1,8 @@
 {
-  "games_played": 2,
-  "games_won": 2,
+  "games_played": 3,
+  "games_won": 3,
   "games_lost": 0,
-  "times_as_mafia": 0,
+  "times_as_mafia": 1,
   "times_as_villager": 2,
   "successful_strategies": [
     {
@@ -14,12 +14,18 @@
       "role": "villager",
       "strategy": "As villager: Rally villagers, build consensus, lead investigations",
       "learned": "Won as villager! My deduction worked. Spoke 18 times. Keep questioning."
+    },
+    {
+      "role": "mafia",
+      "strategy": "Navigated accusations by subtly steering conversations towards others, fostering doubt about their motives and actions.",
+      "learned": "\u2705 WON as mafia: Effectively leveraged skepticism by highlighting inconsistencies and unanswered questions in others' arguments, thereby deflecting scrutiny from myself and my allies."
     }
   ],
   "failed_strategies": [],
   "lessons_learned": [
     "Won as villager! My deduction worked. Spoke 12 times. Keep questioning.",
-    "Won as villager! My deduction worked. Spoke 18 times. Keep questioning."
+    "Won as villager! My deduction worked. Spoke 18 times. Keep questioning.",
+    "\u2705 WON as mafia: Effectively leveraged skepticism by highlighting inconsistencies and unanswered questions in others' arguments, thereby deflecting scrutiny from myself and my allies."
   ],
   "behavior_notes": ""
 }

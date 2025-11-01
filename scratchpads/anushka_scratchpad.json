@@ -1,9 +1,9 @@
 {
-  "games_played": 2,
+  "games_played": 3,
   "games_won": 2,
-  "games_lost": 0,
+  "games_lost": 1,
   "times_as_mafia": 0,
-  "times_as_villager": 2,
+  "times_as_villager": 3,
   "successful_strategies": [
     {
       "role": "villager",
@@ -16,10 +16,17 @@
       "learned": "Won as villager! My deduction worked. Spoke 3 times. Keep questioning."
     }
   ],
-  "failed_strategies": [],
+  "failed_strategies": [
+    {
+      "role": "villager",
+      "strategy": "I relied heavily on gut feelings and immediate emotional reactions to express my suspicions early on.",
+      "learned": "\u274c LOST as villager: Over-reliance on gut feelings without presenting any logical reasoning or evidence led to accusations of vagueness and chaos, making me a target for criticism and deflection."
+    }
+  ],
   "lessons_learned": [
     "Won as villager! My deduction worked. Spoke 3 times. Keep questioning.",
-    "Won as villager! My deduction worked. Spoke 3 times. Keep questioning."
+    "Won as villager! My deduction worked. Spoke 3 times. Keep questioning.",
+    "\u274c LOST as villager: Over-reliance on gut feelings without presenting any logical reasoning or evidence led to accusations of vagueness and chaos, making me a target for criticism and deflection."
   ],
   "behavior_notes": ""
 }

@@ -1,9 +1,9 @@
 {
-  "games_played": 2,
+  "games_played": 3,
   "games_won": 0,
-  "games_lost": 2,
+  "games_lost": 3,
   "times_as_mafia": 2,
-  "times_as_villager": 0,
+  "times_as_villager": 1,
   "successful_strategies": [],
   "failed_strategies": [
     {
@@ -15,11 +15,17 @@
       "role": "mafia",
       "strategy": "As mafia: Stay quiet early, strike at perfect moments, create calculated doubt",
       "learned": "Lost as mafia. Was I too obvious? Spoke 6 times. Need to blend better."
+    },
+    {
+      "role": "villager",
+      "strategy": "I attempted to observe and subtly guide suspicion towards more volatile players by questioning their motives and highlighting inconsistencies in their arguments.",
+      "learned": "\u274c LOST as villager: My tendency to wait for opportune moments to speak allowed others to shape the narrative and direct suspicion before I could effectively interject."
     }
   ],
   "lessons_learned": [
     "Lost as mafia. Was I too obvious? Spoke 13 times. Need to blend better.",
-    "Lost as mafia. Was I too obvious? Spoke 6 times. Need to blend better."
+    "Lost as mafia. Was I too obvious? Spoke 6 times. Need to blend better.",
+    "\u274c LOST as villager: My tendency to wait for opportune moments to speak allowed others to shape the narrative and direct suspicion before I could effectively interject."
   ],
   "behavior_notes": ""
 }

@@ -488,26 +488,98 @@ Respond with ONLY the word you want removed, nothing else."""
         
         # Update scratchpads for all agents based on game outcome
         if winner:
+            # Get full conversation for analysis
+            full_conversation = self.get_conversation_snapshot()
+            
             for agent in self.agents:
                 won = (winner == "villagers" and agent.role == "villager") or (winner == "mafia" and agent.role == "mafia")
                 
-                # Generate strategy description based on role
-                if agent.role == "mafia":
-                    strategy_used = f"As mafia: {agent.personality.get('mafia_strategy', 'Standard mafia play')}"
-                    if won:
-                        what_learned = f"Won as mafia! My deceptive style worked. Spoke {agent.message_count} times. Keep being aggressive."
-                    else:
-                        what_learned = f"Lost as mafia. Was I too obvious? Spoke {agent.message_count} times. Need to blend better."
-                else:
-                    strategy_used = f"As villager: {agent.personality.get('villager_strategy', 'Standard villager play')}"
-                    if won:
-                        what_learned = f"Won as villager! My deduction worked. Spoke {agent.message_count} times. Keep questioning."
-                    else:
-                        what_learned = f"Lost as villager. Missed the mafia. Spoke {agent.message_count} times. Need better analysis."
-                
-                agent.update_strategy(won, agent.role, strategy_used, what_learned)
-
+                # Let agent analyze the full game and generate their own learnings
+                self._generate_agent_learnings(agent, won, full_conversation)
     
+    def _generate_agent_learnings(self, agent: Agent, won: bool, full_conversation: List[Dict]) -> None:
+        """
+        Let agent analyze the full game conversation and generate their own strategic learnings.
+        NO player names should be mentioned - only strategies and tactics.
+        """
+        # Format conversation for analysis
+        conversation_text = self._format_conversation(full_conversation)
+        
+        # Get agent's messages only
+        agent_messages = [msg['content'] for msg in full_conversation if msg.get('agent') == agent.name and not msg.get('is_system')]
+        
+        outcome = "WON" if won else "LOST"
+        
+        learning_prompt = f"""You are {agent.name}, a {agent.role.upper()} who just {outcome} a Mafia game.
+
+Your personality: {agent.personality.get('description', '')}
+You spoke {agent.message_count} times during this game.
+Previous games played: {agent.scratchpad.get('games_played', 0)}
+
+FULL GAME CONVERSATION (for your analysis):
+{conversation_text[:3000]}  
+
+YOUR MESSAGES DURING THIS GAME:
+{chr(10).join(agent_messages[:10])}
+
+Analyze this game and extract strategic learnings for FUTURE games.
+
+CRITICAL RULES FOR YOUR ANALYSIS:
+1. DO NOT mention ANY specific player names (no "Jay", "Aryan", etc.)
+2. Focus ONLY on strategies, tactics, and behavioral patterns
+3. Use generic terms: "my allies", "the villagers", "suspicious players", "the accused"
+4. Describe WHAT worked or didn't work, not WHO you interacted with
+
+Generate 3 sections:
+
+STRATEGY_USED: Describe the overall strategy you employed this game (1 sentence, no names)
+Example: "Deflected suspicion by questioning others aggressively early in the game"
+
+WHAT_WORKED: What tactics were effective? (1 sentence, no names)
+Example: "Creating confusion by rapidly shifting focus between multiple suspects"
+
+WHAT_FAILED: What should you avoid or improve? (1 sentence, no names) 
+Example: "Being too quiet in early rounds made me appear suspicious later"
+
+Respond ONLY in this format:
+STRATEGY_USED: [your strategy]
+WHAT_WORKED: [what worked]
+WHAT_FAILED: [what to avoid/improve]"""
+
+        try:
+            time.sleep(2)  # Rate limit protection
+            response = self.api_handler.generate_response(learning_prompt)
+            
+            if response:
+                # Parse response
+                strategy_used = "Standard play"
+                what_worked = "No clear successes identified"
+                what_failed = "No clear failures identified"
+                
+                if "STRATEGY_USED:" in response:
+                    strategy_used = response.split("STRATEGY_USED:")[1].split("\n")[0].strip()
+                if "WHAT_WORKED:" in response:
+                    what_worked = response.split("WHAT_WORKED:")[1].split("\n")[0].strip()
+                if "WHAT_FAILED:" in response:
+                    what_failed = response.split("WHAT_FAILED:")[1].split("\n")[0].strip()
+                
+                # Create learning summary
+                if won:
+                    lesson = f"✅ {outcome} as {agent.role}: {what_worked}"
+                else:
+                    lesson = f"❌ {outcome} as {agent.role}: {what_failed}"
+                
+                # Update agent's scratchpad with AI-generated learnings
+                agent.update_strategy(won, agent.role, strategy_used, lesson)
+                
+                print(f"[LEARNING] {agent.name}: {lesson[:100]}...")
+                
+        except Exception as e:
+            print(f"Error generating learnings for {agent.name}: {e}")
+            # Fallback to simple update
+            simple_lesson = f"{'Won' if won else 'Lost'} as {agent.role} - spoke {agent.message_count} times"
+            agent.update_strategy(won, agent.role, f"As {agent.role}", simple_lesson)
+        
     def get_agent_states(self) -> List[Dict]:
         """Get current state of all agents"""
         return [

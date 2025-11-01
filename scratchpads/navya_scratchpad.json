@@ -1,9 +1,9 @@
 {
-  "games_played": 2,
+  "games_played": 3,
   "games_won": 2,
-  "games_lost": 0,
+  "games_lost": 1,
   "times_as_mafia": 0,
-  "times_as_villager": 2,
+  "times_as_villager": 3,
   "successful_strategies": [
     {
       "role": "villager",
@@ -16,10 +16,17 @@
       "learned": "Won as villager! My deduction worked. Spoke 18 times. Keep questioning."
     }
   ],
-  "failed_strategies": [],
+  "failed_strategies": [
+    {
+      "role": "villager",
+      "strategy": "Defensive questioning and deflecting accusations by scrutinizing others' motives and evidence.",
+      "learned": "\u274c LOST as villager: Being overly defensive and persistent in challenging accusations, even when it could be perceived as deflecting rather than seeking genuine clarity."
+    }
+  ],
   "lessons_learned": [
     "Won as villager! My deduction worked. Spoke 14 times. Keep questioning.",
-    "Won as villager! My deduction worked. Spoke 18 times. Keep questioning."
+    "Won as villager! My deduction worked. Spoke 18 times. Keep questioning.",
+    "\u274c LOST as villager: Being overly defensive and persistent in challenging accusations, even when it could be perceived as deflecting rather than seeking genuine clarity."
   ],
   "behavior_notes": ""
 }
