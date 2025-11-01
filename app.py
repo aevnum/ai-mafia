@@ -205,23 +205,7 @@ else:
     with col1:
         st.subheader("💬 Conversation")
         
-        # Auto-run rounds
-        if st.session_state.game_running:
-            with st.spinner("Agents thinking..."):
-                try:
-                    # Run a round
-                    round_messages = st.session_state.game.run_round()
-                    if round_messages:
-                        st.session_state.round_count += 1
-                except Exception as e:
-                    st.warning(f"⚠️ Rate limit or API error. Game will retry automatically.")
-                    print(f"Error in game round: {e}")
-            
-            # Small delay before rerun
-            time.sleep(1)
-            st.rerun()
-        
-        # Display conversation
+        # Display conversation first (live updates)
         conversation_container = st.container(height=600)
         with conversation_container:
             for msg in st.session_state.game.conversation_history:
@@ -243,20 +227,42 @@ else:
                         f'</div>',
                         unsafe_allow_html=True
                     )
+        
+        # Auto-run rounds at the end so conversation shows first
+        if st.session_state.game_running:
+            with st.spinner("Agents thinking..."):
+                try:
+                    # Run a round
+                    round_messages = st.session_state.game.run_round()
+                    if round_messages:
+                        st.session_state.round_count += 1
+                except Exception as e:
+                    st.warning(f"⚠️ Rate limit or API error. Game will retry automatically.")
+                    print(f"Error in game round: {e}")
+            
+            # Small delay before rerun
+            time.sleep(1)
+            st.rerun()
     
     with col2:
         st.subheader("👥 Agents")
         
         agent_states = st.session_state.game.get_agent_states()
+        eliminated = st.session_state.game.eliminated_agents
         
         for agent_state in agent_states:
             role_emoji = "🔴" if agent_state['role'] == "mafia" else "🔵"
             typing_class = "typing" if agent_state['is_typing'] else ""
             typing_indicator = " ✍️ typing..." if agent_state['is_typing'] else ""
             
+            # Show eliminated agents differently
+            is_eliminated = agent_state['name'] in eliminated
+            eliminated_style = "opacity: 0.4; text-decoration: line-through;" if is_eliminated else ""
+            eliminated_badge = " ❌ ELIMINATED" if is_eliminated else ""
+            
             st.markdown(
-                f'<div class="agent-card {typing_class}">'
-                f'{role_emoji} <strong>{agent_state["name"]}</strong>{typing_indicator}<br>'
+                f'<div class="agent-card {typing_class}" style="{eliminated_style}">'
+                f'{role_emoji} <strong>{agent_state["name"]}</strong>{typing_indicator}{eliminated_badge}<br>'
                 f'<small>Messages: {agent_state["message_count"]}</small>'
                 f'</div>',
                 unsafe_allow_html=True
