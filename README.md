@@ -1,12 +1,32 @@
+
 # AI Mafia
 
 AI Mafia is an advanced simulation of the classic social deduction game "Mafia," where AI agents play as villagers and mafia members, each with unique personalities, memory, and evolving strategies. The game is designed for research, experimentation, and entertainment, showcasing multi-agent reasoning, deception, and emergent behavior.
 
+## Orchestrator-Driven Conversation
+
+Unlike traditional round-robin or scheduler-based agent systems, AI Mafia uses a **central Orchestrator** to manage the flow of conversation. The Orchestrator decides which agent should speak next based on:
+
+- **Defense Priority:** If an agent is accused or mentioned, they get a chance to defend themselves immediately.
+- **Patience Threshold:** Agents who have been quiet for too long are forced to speak, ensuring everyone participates.
+- **Echo Chamber Detection:** If the conversation becomes repetitive, the Orchestrator selects a quiet agent to break the loop.
+- **No Immediate Echo:** Prevents the same agent from speaking twice in a row, promoting diverse viewpoints.
+
+**Advantages of the Orchestrator approach:**
+- More realistic, dynamic, and unpredictable conversations
+- Dominant personalities emerge naturally, as in real social deduction games
+- Ensures quiet agents are not left out, but doesn't force strict turn-taking
+- Adapts to the flow of accusations, alliances, and suspicion
+
+This approach leads to emergent social dynamics and more engaging, lifelike games.
+
+
 ## Features
 
+- **Orchestrator-Driven Conversation:** Central manager decides who speaks next for natural, context-aware flow.
 - **AI Agents with Personalities:** Each agent has a unique personality profile (aggressive, analytical, charismatic, etc.) that influences their speech and strategy.
 - **Persistent Memory:** Agents maintain a scratchpad of past games, learning from wins and losses to adapt their tactics.
-- **Dynamic Conversation:** Agents converse in a shared chat, analyze conversation context, and decide when and how to speak.
+- **Dynamic, Realistic Dialogue:** Agents analyze conversation context and respond with evidence-based reasoning.
 - **Voting & Elimination:** After a set number of messages, agents vote to eliminate a suspect. Voting history is tracked for pattern analysis.
 - **Death Wills & Mafia Editing:** Eliminated villagers leave cryptic wills. Mafia can edit these to obscure clues.
 - **Win Condition Detection:** The game automatically detects and announces when villagers or mafia win.
@@ -65,6 +85,7 @@ AI Mafia is an advanced simulation of the classic social deduction game "Mafia,"
 ## License
 
 MIT License. See `LICENSE` for details.
+
 
 ## Acknowledgments
 

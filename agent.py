@@ -11,6 +11,10 @@ from personalities import get_personality
 
 
 class Agent:
+    """
+    AI Agent with Generator module, personalities, and scratchpad memory
+    The Orchestrator now decides WHEN to speak instead of the Agent.
+    """
 
     def _get_personality_rules(self) -> str:
         """Get specific rules for this personality"""
@@ -22,12 +26,6 @@ class Agent:
             'charismatic': "- Build alliances naturally\n- Use persuasive language\n- Rally people to your side"
         }
         return "\n".join([rules.get(trait, "") for trait in traits if trait in rules])
-    """
-    AI Agent with two-part brain:
-    - Scheduler: Decides WHEN to speak
-    - Generator: Decides WHAT to say
-    Plus: Personality system and persistent scratchpad memory
-    """
     
     def __init__(self, agent_id: int, name: str, role: str):
         self.id = agent_id
@@ -197,55 +195,24 @@ Respond in 2-3 sentences describing your game plan:"""
         
         return context
         
-    def scheduler(self, conversation_history: List[Dict]) -> bool:
-        """Smarter decision about when to speak"""
-        # Time check
-        time_since_last = time.time() - self.last_speak_time
-        if time_since_last < MIN_SPEAK_INTERVAL:
-            return False
-        
-        recent_messages = conversation_history[-10:]
-        
-        # ✅ NEW: Speak if directly mentioned
-        mentioned = any(self.name.lower() in msg.get('content', '').lower() 
-                       for msg in recent_messages)
-        if mentioned:
-            return True  # Always respond when called out
-        
-        # ✅ NEW: Speak if someone just made a strong accusation
-        strong_accusation = any(
-            any(word in msg.get('content', '').lower() 
-                for word in ['mafia', 'lying', 'vote for', 'suspect'])
-            for msg in recent_messages[-3:]
-        )
-        
-        # ✅ NEW: Don't spam - if you spoke in last 3 messages, be quieter
-        recent_speakers = [msg.get('agent') for msg in recent_messages[-3:] 
-                           if not msg.get('is_system')]
-        spoke_recently = recent_speakers.count(self.name) >= 2
-        
-        if spoke_recently:
-            base_probability = 0.2  # Much quieter
-        elif strong_accusation:
-            base_probability = 0.6  # Jump in when things heat up
-        else:
-            base_probability = 0.35
-        
-        # Personality adjustments
-        if "aggressive" in self.personality.get("traits", []):
-            base_probability += 0.15
-        elif "cautious" in self.personality.get("traits", []):
-            base_probability -= 0.1
-        
-        # Mafia slightly more active to deflect
-        if self.role == "mafia":
-            base_probability += 0.1
-        
-        return random.random() < base_probability
     
 
-    def create_prompt(self, conversation_history: List[Dict], vote_history: List[Dict] = None, context_reset_index: int = 0) -> str:
-        """Creates structured prompt requiring evidence-based reasoning (NO example analysis text)"""
+    def create_prompt(self, conversation_history: List[Dict], vote_history: List[Dict] = None, 
+                      context_reset_index: int = 0, is_impatient_turn: bool = False) -> str:
+        """Creates structured prompt requiring evidence-based reasoning"""
+        
+        # ADD this special instruction for impatient turns:
+        impatience_instruction = ""
+        if is_impatient_turn:
+            impatience_instruction = """
+⏰ SPECIAL SITUATION: You haven't spoken in a while.
+
+Give YOUR FRESH PERSPECTIVE on the current situation.
+- Don't just agree with what others said
+- What do YOU uniquely observe?
+- Bring a NEW angle to the discussion
+
+"""
 
         # ✅ NEW: Only use conversation AFTER the last voting round
         if context_reset_index > 0:
@@ -320,7 +287,7 @@ CURRENT DISCUSSION (post-voting):
 {context_str}
 
 ===== YOUR TURN =====
-
+{impatience_instruction}
 INSTRUCTION: Respond in this EXACT format. Do not deviate:
 
 <reasoning>
@@ -334,10 +301,6 @@ Step 3: Evidence to cite: [specific quote from conversation]
 </response>
 
 CRITICAL RULES:
-- Everything inside <reasoning> is PRIVATE (not shown to others)
-- Everything inside <response> is PUBLIC (what others hear)
-- Use ONLY active player names: {', '.join(active_players)}
-- Cite SPECIFIC evidence from conversation above
 - Speak in FIRST PERSON ("I noticed..." not "Jay noticed...")
 
 🎭 PERSONALITY RULES YOU MUST FOLLOW:
@@ -371,18 +334,13 @@ Your response:"""
                 # Mid-game - Use simplified, explicit structured format
                 prompt = f"""You are {self.name}, a VILLAGER in a Mafia game.
 
-ACTIVE PLAYERS: {', '.join(active_players)}
-ELIMINATED: {', '.join(eliminated_players)}
-
-{summary_injection}  # ✅ NEW: Inject summary instead of full history
-
 {scratchpad_context}
 
 CURRENT DISCUSSION (post-voting):
 {context_str}
 
 ===== YOUR TURN =====
-
+{impatience_instruction}
 INSTRUCTION: Respond in this EXACT format. Do not deviate:
 
 <reasoning>
@@ -396,10 +354,6 @@ Step 3: Evidence to cite: [specific quote from conversation]
 </response>
 
 CRITICAL RULES:
-- Everything inside <reasoning> is PRIVATE (not shown to others)
-- Everything inside <response> is PUBLIC (what others hear)
-- Use ONLY active player names: {', '.join(active_players)}
-- Cite SPECIFIC evidence from conversation above
 - Speak in FIRST PERSON ("I noticed..." not "Jay noticed...")
 
 Your formatted response:"""

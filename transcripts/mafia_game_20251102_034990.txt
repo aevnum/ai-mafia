@@ -1,0 +1,72 @@
+NOTE : Forgot to click Save transcript so this is a copy paste.
+
+🔔 System: 🎭 OPENING HINT: Someone's restraint is not virtue, but strategy.
+🔔 System: 💭 Someone among the 8 players is not who they claim to be...
+🔔 System: Players: Yatharth, Aryan, Navya, Jay, Khushi, Anushka, Kshitij, Laavanya
+Yatharth (🔴 MAFIA)
+"Ominous hint, you say? Or just the ramblings of someone who can't string a coherent sentence together? Let's see if anyone *actually* knows what they're talking about, or if we're all just guessing in the dark. I'm here to shed some light, if there's any to be found."
+Aryan (🔵 VILLAGER)
+This game is already stinking of lies, and I can feel it in my gut! That cryptic nonsense is just a smokescreen; the real rot is hidden among us, and I'll tear this village apart until I find it!
+Navya (🔴 MAFIA)
+This... this feeling in the air. It's unsettling. I hope we can all stay clear-headed and figure this out together, for everyone's sake.
+Jay (🔵 VILLAGER)
+Aryan, your "gut feeling" and vow to "tear this village apart" seem a bit intense right off the bat. What specifically makes you so certain there are lies, and what are you looking for when you say you'll tear it apart?
+Khushi (🔵 VILLAGER)
+Jay, I agree with your assessment of Aryan's intensity. Aryan, you say you can "feel it in your gut" and will "tear this village apart," but what specific actions or words are making you so certain there are lies so early on? I'm curious what you're actually looking for.
+Anushka (🔵 VILLAGER)
+Aryan, I hear you saying you feel lies and want to find them, but your intensity is a bit concerning so early on. Can you explain what specific words or actions are making you feel this way, and what you mean by "tear this village apart"?
+Kshitij (🔵 VILLAGER)
+Aryan, I understand you're feeling a lot of suspicion, but your intensity is a bit alarming. Can you tell us what specific words or actions are making you so sure there are lies so early on? What exactly do you mean by "tear this village apart"?
+Laavanya (🔵 VILLAGER)
+I'm also feeling a bit uneasy about how quickly Aryan is jumping to accusations. While I agree we need to find lies, his intensity and talk of "tearing this village apart" feels a little extreme this early on. Can you elaborate on what specifically makes you so sure, Aryan?
+Yatharth (🔴 MAFIA)
+I'm finding it interesting how everyone is focusing on Aryan's intensity. It's definitely a lot to process right now, but I'm curious to see what he actually bases his "gut feeling" on. Let's keep digging for facts.
+Aryan (🔵 VILLAGER)
+My intensity comes from the sheer air of deception I'm sensing, and frankly, it's concerning how many of you are so quick to question my feelings rather than the lies themselves. I'm not just guessing; I'm reacting to the palpable unease.
+Navya (🔴 MAFIA)
+I'm still trying to process everything, but it's interesting to see how much attention Aryan's strong feelings are getting. I hope we can all remain calm and focus on understanding the situation.
+Jay (🔵 VILLAGER)
+Aryan, you say you're sensing deception and are concerned we're questioning your feelings instead of lies. Can you elaborate on what specific "air of deception" you're sensing beyond your gut feeling? I'm trying to understand what concrete things you're picking up on.
+Khushi (🔵 VILLAGER)
+Jay, I agree with your request for more concrete details. Aryan, you say you're sensing deception, but can you point to anything specific beyond a general "air of deception" or your gut feeling? I'm really trying to understand what has you so convinced there are lies so early on.
+Anushka (🔵 VILLAGER)
+Aryan, I understand you're feeling a strong sense of deception, but you mentioned sensing an "air of deception" and reacting to "palpable unease." Can you point to any specific words or actions from anyone that created this feeling for you, beyond just your gut instinct?
+Kshitij (🔵 VILLAGER)
+I echo Jay's sentiment; while I understand Aryan is feeling a strong sense of deception, we need concrete evidence beyond a "gut feeling" or an "air of deception" to make any accusations. What specific words or actions are making you so certain there are lies so early on?
+Laavanya (🔵 VILLAGER)
+I'm with Jay and the others who are trying to understand Aryan's perspective. While I appreciate his strong feelings, saying you're sensing an "air of deception" and reacting to "palpable unease" doesn't give us much to go on. Can you give us any specific words or actions from anyone that sparked that feeling for you, Aryan?
+🔔 System: 🗳️ VOTING TIME! After 20 messages, it's time to vote someone out!
+🔔 System: 🗳️ Yatharth voted for Aryan. Reason: I vote for Aryan because his intense, vague pronouncements about sensing deception without any concrete evidence make him the most suspicious player at this moment.
+🔔 System: 🗳️ Aryan voted for Jay. Reason: I vote for Jay because I noticed his question about my intensity was the first one, and others quickly followed suit with very similar phrasing, suggesting a coordinated effort to target me.
+🔔 System: 🗳️ Navya voted for Aryan. Reason: I vote for Aryan because I observed his strong pronouncements of sensing deception without providing any specific evidence to support his claims.
+🔔 System: 🗳️ Jay voted for Aryan. Reason: I believe Aryan's aggressive reliance on "gut feeling" and his inability to provide specific evidence points to him trying to create chaos as a Mafia member.
+🔔 System: 🗳️ Khushi voted for Aryan. Reason: I vote for Aryan because I observed his intense, vague accusations and defensive reactions when asked for concrete evidence, which I find highly suspicious.
+🔔 System: 🗳️ Anushka voted for Aryan. Reason: I vote for Aryan because I observed him using strong emotional language and "gut feelings" without providing any concrete evidence, which I find to be a red flag.
+🔔 System: 🗳️ Kshitij voted for Aryan. Reason: I vote for Aryan because I observed his aggressive language and lack of specific evidence are highly suspicious for a villager.
+🔔 System: 🗳️ Laavanya voted for Aryan. Reason: I vote for Aryan because I observed him using vague emotional language and deflecting direct questions about his "evidence" when pressed by multiple villagers.
+🔔 System: 📋 VOTE BREAKDOWN: • Yatharth → Aryan: I vote for Aryan because his intense, vague pronouncements about sensing deception without any concrete evidence make him the most suspicious player at this moment. • Aryan → Jay: I vote for Jay because I noticed his question about my intensity was the first one, and others quickly followed suit with very similar phrasing, suggesting a coordinated effort to target me. • Navya → Aryan: I vote for Aryan because I observed his strong pronouncements of sensing deception without providing any specific evidence to support his claims. • Jay → Aryan: I believe Aryan's aggressive reliance on "gut feeling" and his inability to provide specific evidence points to him trying to create chaos as a Mafia member. • Khushi → Aryan: I vote for Aryan because I observed his intense, vague accusations and defensive reactions when asked for concrete evidence, which I find highly suspicious. • Anushka → Aryan: I vote for Aryan because I observed him using strong emotional language and "gut feelings" without providing any concrete evidence, which I find to be a red flag. • Kshitij → Aryan: I vote for Aryan because I observed his aggressive language and lack of specific evidence are highly suspicious for a villager. • Laavanya → Aryan: I vote for Aryan because I observed him using vague emotional language and deflecting direct questions about his "evidence" when pressed by multiple villagers.
+🔔 System: 📊 Voting Results: Aryan: 7 votes, Jay: 1 votes
+🔔 System: ❌ Aryan has been eliminated! They were a VILLAGER.
+🔔 System: 📜 Aryan's LAST WILL: "I saw the way Kshitij deflected my question about the village's unease.
+
+I suspect Kshitij. I noticed how he, Anushka, and Laavanya all pushed back hard on my feelings without offering any reassurance or trying to understand. They seemed more interested in shutting down my concerns than addressing them. It felt like they were trying to control the narrative and steer us away from looking too closely at anything suspicious. They were definitely trying to make sure I didn't get anyone to investigate them."
+
+🔔 System: ✏️ WILL EDITED (mafia removed 1 word): "I saw the way Kshitij deflected my question about the village's unease. I suspect Kshitij. I noticed how he, Anushka, and Laavanya all pushed back hard on my feelings without offering any reassurance or trying to understand. They seemed more interested in shutting down my concerns than addressing them. It felt like they were trying to control the and steer us away from looking too closely at anything suspicious. They were definitely trying to make sure I didn't get anyone to investigate them."
+🔔 System: 📋 ROUND SUMMARY: - Aryan was eliminated (a VILLAGER) - Vote distribution: Aryan (7), Jay (1) - Their will hinted: [analyze the will yourself]
+
+🔄 NEW DISCUSSION ROUND - Focus on what we learned!
+
+Yatharth (🔴 MAFIA)
+Wow, that was a decisive vote for Aryan. It's interesting that so many people saw him as the threat. Let's see what we can glean from his will now.
+Navya (🔴 MAFIA)
+That was indeed a strong vote for Aryan. I'm eager to see what his will reveals, hopefully, it gives us a clearer picture of the remaining players and their intentions.
+Jay (🔵 VILLAGER)
+I'm also very interested to see what Aryan's will reveals. It's crucial we use this information to understand who might still be a threat. Let's hope for some clarity from it.
+Khushi (🔵 VILLAGER)
+I understand everyone's eagerness to see Aryan's will, but it's interesting how quickly we all seem to agree on its importance. What exactly are we hoping to find in it that makes it so crucial right now?
+Anushka (🔵 VILLAGER)
+Khushi, I understand your point about the eagerness, but I think we're all just hoping Aryan's will can give us concrete clues about who the Mafia might be. What makes you question the group's focus on it right now?
+Khushi (🔵 VILLAGER)
+Anushka, you jumped in pretty quickly to defend everyone's eagerness for Aryan's will. What makes you so sure we *need* it for clues, and why do you find my questioning of that so strange?
+Kshitij (🔵 VILLAGER)
+Khushi, I'm with Anushka on this. It's pretty standard procedure to examine the will after a vote to gain more information. Why are you so set on questioning the group's focus on it right now?

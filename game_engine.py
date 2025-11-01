@@ -8,6 +8,7 @@ from typing import List, Dict, Optional
 from agent import Agent
 from api_handler import APIHandler
 from config import DEFAULT_NUM_AGENTS, DEFAULT_NUM_MAFIA, CONVERSATION_CONTEXT_SIZE, VOTING_MESSAGE_THRESHOLD, OPENING_HINTS, VOTING_CONTEXT_SIZE
+from orchestrator import Orchestrator
 
 
 class MafiaGame:
@@ -32,6 +33,7 @@ class MafiaGame:
         self.last_voting_message_count = 0  # Track when last voting occurred
         self.agents_spoken_this_round = set()  # Track who has spoken in current round
         self.conversation_reset_index = 0  # ✅ NEW: Track where context should reset
+        self.orchestrator = Orchestrator()  # ✅ NEW
         
         self._initialize_agents()
     
@@ -160,26 +162,25 @@ class MafiaGame:
         with self.lock:
             return self.conversation_history.copy()
     
-    def process_agent_turn(self, agent: Agent) -> Optional[Dict]:
+    def process_agent_turn(self, agent: Agent, is_impatient_turn: bool = False) -> Optional[Dict]:
         """
-        Process a single agent's potential turn.
-        Returns message dict if agent spoke, None otherwise.
+        Process agent's turn (orchestrator already decided they should speak).
+        Returns message dict.
         """
         # Get current conversation state
         conversation = self.get_conversation_snapshot()
-
-        # SCHEDULER: Decide if agent should speak
-        should_speak = agent.scheduler(conversation)
-
-        if not should_speak:
-            return None
 
         # Mark agent as typing
         agent.is_typing = True
 
         try:
             # GENERATOR: Create what to say
-            prompt = agent.create_prompt(conversation, self.vote_history, context_reset_index=self.conversation_reset_index)
+            prompt = agent.create_prompt(
+                conversation, 
+                self.vote_history, 
+                context_reset_index=self.conversation_reset_index,
+                is_impatient_turn=is_impatient_turn
+            )
             response = self.api_handler.generate_response(prompt)
 
             if response:
@@ -263,8 +264,7 @@ class MafiaGame:
     
     def run_round(self) -> List[Dict]:
         """
-        Run one round where each agent gets a chance to speak.
-        Ensures each agent speaks once before any agent speaks twice (round-robin).
+        Run one round where orchestrator picks ONE agent to speak.
         Returns list of messages from this round.
         """
         round_messages = []
@@ -281,38 +281,26 @@ class MafiaGame:
             self.trigger_voting()
             return round_messages
         
-        # Get active agents (not eliminated)
-        active_agents = [a for a in self.agents if a.name not in self.eliminated_agents]
+        # ✅ ORCHESTRATOR picks next speaker
+        next_speaker = self.orchestrator.select_next_speaker(
+            self.agents, 
+            self.conversation_history,
+            self.eliminated_agents
+        )
         
-        # Reset round tracker if all active agents have spoken
-        if self.agents_spoken_this_round and len(self.agents_spoken_this_round) >= len(active_agents):
-            self.agents_spoken_this_round.clear()
+        if not next_speaker:
+            return round_messages
         
-        # Get agents who haven't spoken this round
-        agents_to_speak = [a for a in active_agents if a.name not in self.agents_spoken_this_round]
+        # Check if this is an impatient turn
+        is_impatient = self.orchestrator.is_impatient_turn(next_speaker.name)
         
-        # If all have spoken, reset and use all active agents
-        if not agents_to_speak:
-            self.agents_spoken_this_round.clear()
-            agents_to_speak = active_agents
+        # Add delay to avoid rate limits
+        time.sleep(2)
         
-        # Shuffle for variety while maintaining fairness
-        random.shuffle(agents_to_speak)
-        
-        # Each agent gets ONE chance to speak this round
-        for agent in agents_to_speak:
-            if not self.is_running:
-                break
-            
-            # Add delay between API calls to avoid rate limits (especially for free tier)
-            time.sleep(2)  # 2 second delay between agent turns
-            
-            # Process agent turn (they decide whether to speak via scheduler)
-            message = self.process_agent_turn(agent)
-            if message:
-                round_messages.append(message)
-                # Mark this agent as having spoken this round
-                self.agents_spoken_this_round.add(agent.name)
+        # Process the selected agent's turn
+        message = self.process_agent_turn(next_speaker, is_impatient_turn=is_impatient)
+        if message:
+            round_messages.append(message)
         
         return round_messages
     
@@ -321,7 +309,18 @@ class MafiaGame:
         # Prevent multiple voting triggers
         if self.in_voting:
             return
-            
+        
+        # ✅ Log speaking distribution before voting
+        recent_speakers = {}
+        messages_since_last = [m for m in self.conversation_history[self.last_voting_message_count:] 
+                              if not m.get('is_system')]
+        for msg in messages_since_last:
+            speaker = msg['agent']
+            recent_speakers[speaker] = recent_speakers.get(speaker, 0) + 1
+        print("\n[ORCHESTRATOR STATS] Speaking distribution this round:")
+        for agent in sorted(recent_speakers.keys(), key=lambda x: recent_speakers[x], reverse=True):
+            print(f"  {agent}: {recent_speakers[agent]} messages")
+        print()
         self.in_voting = True
         self.add_message("System", "🗳️ VOTING TIME! After 20 messages, it's time to vote someone out!", is_system=True)
         

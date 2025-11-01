@@ -190,11 +190,11 @@ with st.sidebar:
     st.info("""
     **How it works:**
     
-    1. **Scheduler Module**: Decides *when* each agent should speak
-    2. **Generator Module**: Decides *what* to say
-    3. **Personalities**: Each agent has unique traits and strategies
-    4. **Scratchpad Memory**: Agents learn from past games
-    5. Mafia agents are cunning deceivers, Villagers are analytical detectives
+    1. **Orchestrator**: A smart manager decides *who* should speak next, based on conversation flow, accusations, and fairness.
+    2. **Generator Module**: Decides *what* to say, using context and agent personality.
+    3. **Personalities**: Each agent has unique traits and strategies.
+    4. **Scratchpad Memory**: Agents learn from past games.
+    5. Mafia agents are cunning deceivers, Villagers are analytical detectives.
     """)
     
     # Display stats if game is running
@@ -213,21 +213,21 @@ if not st.session_state.game:
     st.markdown("""
     ## About This Project
     
-    This is an implementation of the "Time to Talk" paper concept, where AI agents learn:
+    **AI Mafia** uses a central **Orchestrator** to manage the flow of conversation. Instead of each agent deciding when to speak, the Orchestrator:
     
-    - ⏰ **When to speak**: Strategic timing based on conversation flow
-    - 💬 **What to say**: Context-aware responses based on their role
-    - 🤫 **When to stay silent**: Strategic silence as a tactic
-    - 🎯 **Adaptive behavior**: Mafia agents deflect, villagers investigate
+    - Gives defense priority to accused agents
+    - Forces quiet agents to speak if they've been silent too long
+    - Detects echo chambers and breaks repetitive loops
+    - Prevents the same agent from speaking twice in a row
     
-    ### The Two-Part Brain
+    This leads to more realistic, dynamic, and unpredictable conversations—just like a real Mafia game!
     
     Each agent has:
-    1. **Scheduler**: Analyzes conversation flow and decides if now is the right time to speak
-    2. **Generator**: Crafts appropriate responses based on role and context
+    1. **Orchestrator**: Decides *who* speaks next, based on context and fairness
+    2. **Generator**: Crafts context-aware, evidence-based responses
+    3. **Personality & Memory**: Unique traits and learning from past games
     
-    This creates natural, human-like conversations where agents interrupt, build on each other's points,
-    and engage in realistic social deduction gameplay!
+    Agents interrupt, defend, accuse, and strategize in a lifelike social deduction simulation.
     """)
 
 else:
@@ -322,7 +322,7 @@ else:
 st.divider()
 st.markdown("""
 <div style='text-align: center; color: #888; padding: 20px;'>
-    <p>Based on the "Time to Talk" paper | Built with Streamlit</p>
+    <p>Powered by a smart Orchestrator for realistic AI conversation | Built with Streamlit</p>
     <p>Toggle API providers in <code>config.py</code></p>
 </div>
 """, unsafe_allow_html=True)
