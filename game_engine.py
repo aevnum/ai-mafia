@@ -221,33 +221,42 @@ class MafiaGame:
 
     def _parse_agent_response(self, response: str) -> tuple[Optional[str], Optional[str]]:
         """
-        Parse agent response into reasoning (private) and message (public).
+        Parse agent response, handling cases where model ignores structure
         Returns: (reasoning, message)
         """
         import re
 
-        # ✅ Extract reasoning block (private)
+        # Try to extract structured format
         reasoning_match = re.search(r'<reasoning>(.*?)</reasoning>', response, re.DOTALL | re.IGNORECASE)
-        reasoning = reasoning_match.group(1).strip() if reasoning_match else None
-
-        # ✅ Extract response block (public message)
         response_match = re.search(r'<response>(.*?)</response>', response, re.DOTALL | re.IGNORECASE)
+
+        reasoning = reasoning_match.group(1).strip() if reasoning_match else None
         message = response_match.group(1).strip() if response_match else None
 
-        # ✅ Validation: Check if message leaked reasoning
-        if message and reasoning:
-            leak_indicators = ['step 1', 'step 2', 'analyze', 'hypothesis', 'tactic', 'mafia strategy']
-            if any(indicator in message.lower() for indicator in leak_indicators):
-                print(f"⚠️ Agent response leaked reasoning, cleaning...")
-                for indicator in leak_indicators:
-                    message = re.sub(f'.*{indicator}.*', '', message, flags=re.IGNORECASE)
-                message = message.strip()
+        # FALLBACK: If tags not found, split on common patterns
+        if not reasoning and not message:
+            # Check if response contains the opening tags but no closing tags (truncation)
+            if '<reasoning>' in response.lower():
+                parts = re.split(r'<reasoning>|<response>', response, flags=re.IGNORECASE)
+                if len(parts) >= 2:
+                    reasoning = parts[1].strip()
+                if len(parts) >= 3:
+                    message = parts[2].strip()
+            else:
+                # No structure at all - treat entire response as message
+                message = response.strip()
 
-        # ✅ Fallback: if no tags, treat entire response as message (for opening statements)
-        if not message:
-            clean_response = re.sub(r'<reasoning>.*?</reasoning>', '', response, flags=re.DOTALL | re.IGNORECASE)
-            clean_response = re.sub(r'<response>|</response>', '', clean_response, flags=re.IGNORECASE)
-            message = clean_response.strip() if clean_response.strip() else response
+        # Clean up any leaked reasoning indicators from message
+        if message and reasoning:
+            leak_patterns = [
+                r'Step \d+:.*?\n',
+                r'EVIDENCE GATHERING.*?\n',
+                r'HYPOTHESIS:.*?\n',
+                r'MY MOVE:.*?\n'
+            ]
+            for pattern in leak_patterns:
+                message = re.sub(pattern, '', message, flags=re.IGNORECASE)
+            message = message.strip()
 
         return reasoning, message
     

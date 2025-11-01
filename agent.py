@@ -251,7 +251,7 @@ Respond in 2-3 sentences describing your game plan:"""
         if self.role == "mafia":
             strategy = self.personality.get("mafia_strategy", "")
             if is_game_start:
-                # ✅ Opening prompt - no reasoning needed yet
+                # Opening prompt - no reasoning needed yet
                 prompt = f"""You are {self.name}, a MAFIA member in a Mafia game.
 
 PERSONALITY: {personality_desc}
@@ -269,56 +269,43 @@ Speak in FIRST PERSON only. Use "I", "me", "my".
 
 Your response:"""
             else:
-                # ✅ Mid-game - ENFORCE reasoning blocks
+                # Mid-game - Use simplified, explicit structured format
                 prompt = f"""You are {self.name}, a MAFIA member in a Mafia game.
-
-PERSONALITY: {personality_desc}
-STRATEGY: {strategy}
 
 ACTIVE PLAYERS: {', '.join(active_players)}
 ELIMINATED: {', '.join(eliminated_players)}
 
 {scratchpad_context}
 
-VOTING HISTORY:
-{vote_summary}
-
 RECENT CONVERSATION:
 {context_str}
 
 ===== YOUR TURN =====
 
-You must respond in TWO parts:
+INSTRUCTION: Respond in this EXACT format. Do not deviate:
 
-PART 1 - REASONING (private, not shown to others)
-Analyze the situation between <reasoning> tags:
 <reasoning>
-- Who is closest to figuring me out?
-- Which villagers suspect each other? 
-- Can I amplify existing conflicts?
-- Which tactic should I use: (A) Deflect by accusing someone, (B) Defend a villager, (C) Create chaos?
-- What SPECIFIC evidence from above supports my move?
+Step 1: Who suspects me? [brief analysis]
+Step 2: What's my move? [deflect/defend/chaos]
+Step 3: Evidence to cite: [specific quote from conversation]
 </reasoning>
 
-PART 2 - RESPONSE (public message to other players)
-Write your actual message between <response> tags:
 <response>
-[Your 1-2 sentence message here]
+[Your 1-2 sentence public message, using FIRST PERSON]
 </response>
 
-RULES FOR YOUR RESPONSE:
-✓ Reference SPECIFIC recent events (names, votes, statements from conversation above)
-✓ Use FIRST PERSON ("I noticed..." not "{self.name} noticed...")
-✓ Use ONLY names from ACTIVE PLAYERS list: {', '.join(active_players)}
-✓ Sound helpful, not defensive
-✗ Don't use words "deflecting" "suspicious" "mafia" - be subtle
-✗ Don't repeat phrases from your last messages
+CRITICAL RULES:
+- Everything inside <reasoning> is PRIVATE (not shown to others)
+- Everything inside <response> is PUBLIC (what others hear)
+- Use ONLY active player names: {', '.join(active_players)}
+- Cite SPECIFIC evidence from conversation above
+- Speak in FIRST PERSON ("I noticed..." not "Jay noticed...")
 
-Your full response (both parts):"""
+Your formatted response:"""
         else:
             strategy = self.personality.get("villager_strategy", "")
             if is_game_start:
-                # ✅ Opening prompt - no reasoning needed yet
+                # Opening prompt - no reasoning needed yet
                 prompt = f"""You are {self.name}, a VILLAGER in a Mafia game.
 
 PERSONALITY: {personality_desc}
@@ -336,61 +323,39 @@ Speak in FIRST PERSON only. Use "I", "me", "my".
 
 Your response:"""
             else:
-                # ✅ Mid-game - ENFORCE reasoning blocks
+                # Mid-game - Use simplified, explicit structured format
                 prompt = f"""You are {self.name}, a VILLAGER in a Mafia game.
-
-PERSONALITY: {personality_desc}
-STRATEGY: {strategy}
 
 ACTIVE PLAYERS: {', '.join(active_players)}
 ELIMINATED: {', '.join(eliminated_players)}
 
 {scratchpad_context}
 
-VOTING HISTORY (look for patterns):
-{vote_summary}
-
 RECENT CONVERSATION:
 {context_str}
 
 ===== YOUR TURN =====
 
-You must respond in TWO parts:
+INSTRUCTION: Respond in this EXACT format. Do not deviate:
 
-PART 1 - DETECTIVE WORK (private analysis, not shown to others)
-Write your investigation between <reasoning> tags:
 <reasoning>
-EVIDENCE GATHERING - Look for:
-- Who voted together in multiple rounds?
-- Who defends each other without reason?
-- Who changes subject when probed?
-- Who asks questions but never answers them?
-- Whose accusations lack specific evidence?
-
-HYPOTHESIS:
-- Based on evidence above, who are the 2 most likely mafia?
-- What specific pattern supports this?
-
-MY MOVE:
-- What specific behavior will I call out?
-- What evidence from the conversation supports this?
+Step 1: Who looks suspicious? [brief analysis]
+Step 2: What's my move? [accuse/defend/question]
+Step 3: Evidence to cite: [specific quote from conversation]
 </reasoning>
 
-PART 2 - YOUR MESSAGE (public statement to other players)
-Write your actual message between <response> tags:
 <response>
-[Your 1-2 sentence message here]
+[Your 1-2 sentence public message, using FIRST PERSON]
 </response>
 
-RULES FOR YOUR MESSAGE:
-✓ Call out SPECIFIC behavior with EVIDENCE (cite what they said/did)
-✓ Ask pointed questions to expose lies
-✓ Use FIRST PERSON ("I saw..." not "{self.name} saw...")
-✓ Use ONLY names from ACTIVE PLAYERS list: {', '.join(active_players)}
-✗ Don't just say "deflecting" - cite what they deflected FROM
-✗ Don't repeat your last messages
+CRITICAL RULES:
+- Everything inside <reasoning> is PRIVATE (not shown to others)
+- Everything inside <response> is PUBLIC (what others hear)
+- Use ONLY active player names: {', '.join(active_players)}
+- Cite SPECIFIC evidence from conversation above
+- Speak in FIRST PERSON ("I noticed..." not "Jay noticed...")
 
-Your full response (both parts):"""
+Your formatted response:"""
         return prompt
 
     def _extract_active_players(self, conversation_history: List[Dict]) -> List[str]:
