@@ -32,7 +32,7 @@ DEFAULT_NUM_MAFIA = 2
 MIN_SPEAK_INTERVAL = 3  # Minimum seconds between agent messages
 CONVERSATION_CONTEXT_SIZE = 40  # Number of recent messages agents see when speaking
 VOTING_CONTEXT_SIZE = 50  # Number of recent messages agents see during voting
-VOTING_MESSAGE_THRESHOLD = 20  # Trigger voting after this many messages
+VOTING_MESSAGE_THRESHOLD = 16  # Trigger voting after this many messages
 MAX_AGENTS = 8  # Maximum number of agents in a game
 
 # Opening Hints - Create initial suspicion and conversation hooks

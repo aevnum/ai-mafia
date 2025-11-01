@@ -232,10 +232,25 @@ Respond in 2-3 sentences describing your game plan:"""
         
         return random.random() < base_probability
     
-    def create_prompt(self, conversation_history: List[Dict], vote_history: List[Dict] = None) -> str:
+
+    def create_prompt(self, conversation_history: List[Dict], vote_history: List[Dict] = None, context_reset_index: int = 0) -> str:
         """Creates structured prompt requiring evidence-based reasoning (NO example analysis text)"""
-        recent_context = conversation_history[-CONVERSATION_CONTEXT_SIZE:]
-        context_str = self._format_conversation(recent_context)
+        # ✅ NEW: Only use conversation AFTER the last voting round
+        if context_reset_index > 0:
+            # Get only post-voting context
+            relevant_context = [msg for msg in conversation_history[context_reset_index:] 
+                               if not msg.get('is_system') or 'ROUND SUMMARY' in msg.get('content', '')]
+            # Also grab the round summary
+            round_summary = None
+            for msg in conversation_history[max(0, context_reset_index-5):context_reset_index+5]:
+                if msg.get('is_system') and 'ROUND SUMMARY' in msg.get('content', ''):
+                    round_summary = msg['content']
+                    break
+        else:
+            # First round - use recent context
+            relevant_context = conversation_history[-CONVERSATION_CONTEXT_SIZE:]
+            round_summary = None
+        context_str = self._format_conversation(relevant_context)
         vote_summary = self._format_vote_history(vote_history) if vote_history else "No votes yet."
         personality_desc = self.personality.get("description", "")
         scratchpad_context = self.get_scratchpad_context()
@@ -247,6 +262,11 @@ Respond in 2-3 sentences describing your game plan:"""
         # Determine if this is the start of the game (few non-system messages)
         non_system_messages = [m for m in conversation_history if not m.get('is_system')]
         is_game_start = len(non_system_messages) < 3
+
+        # Inject round summary if available
+        summary_injection = ""
+        if round_summary:
+            summary_injection = f"\n{round_summary}\n\nBased on the elimination and will, what do we know now?\n"
 
         if self.role == "mafia":
             strategy = self.personality.get("mafia_strategy", "")
@@ -275,9 +295,11 @@ Your response:"""
 ACTIVE PLAYERS: {', '.join(active_players)}
 ELIMINATED: {', '.join(eliminated_players)}
 
+{summary_injection}  # ✅ NEW: Inject summary instead of full history
+
 {scratchpad_context}
 
-RECENT CONVERSATION:
+CURRENT DISCUSSION (post-voting):
 {context_str}
 
 ===== YOUR TURN =====
@@ -329,9 +351,11 @@ Your response:"""
 ACTIVE PLAYERS: {', '.join(active_players)}
 ELIMINATED: {', '.join(eliminated_players)}
 
+{summary_injection}  # ✅ NEW: Inject summary instead of full history
+
 {scratchpad_context}
 
-RECENT CONVERSATION:
+CURRENT DISCUSSION (post-voting):
 {context_str}
 
 ===== YOUR TURN =====

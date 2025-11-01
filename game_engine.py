@@ -31,6 +31,7 @@ class MafiaGame:
         self.eliminated_agents = []
         self.last_voting_message_count = 0  # Track when last voting occurred
         self.agents_spoken_this_round = set()  # Track who has spoken in current round
+        self.conversation_reset_index = 0  # ✅ NEW: Track where context should reset
         
         self._initialize_agents()
     
@@ -178,7 +179,7 @@ class MafiaGame:
 
         try:
             # GENERATOR: Create what to say
-            prompt = agent.create_prompt(conversation, self.vote_history)
+            prompt = agent.create_prompt(conversation, self.vote_history, context_reset_index=self.conversation_reset_index)
             response = self.api_handler.generate_response(prompt)
 
             if response:
@@ -364,6 +365,18 @@ class MafiaGame:
                                 f"✏️ WILL EDITED (mafia removed 1 word): \"{edited_will}\"", 
                                 is_system=True)
                 
+                # ✅ NEW: Create a summary of what just happened
+                vote_summary = f"📋 ROUND SUMMARY:\n"
+                vote_summary += f"- {eliminated} was eliminated ({role_reveal})\n"
+                vote_summary += f"- Vote distribution: {', '.join([f'{name} ({count})' for name, count in sorted(votes.items(), key=lambda x: x[1], reverse=True)])}\n"
+                if eliminated_agent.role == "villager":
+                    vote_summary += f"- Their will hinted: [analyze the will yourself]\n"
+                vote_summary += f"\n🔄 NEW DISCUSSION ROUND - Focus on what we learned!"
+                self.add_message("System", vote_summary, is_system=True)
+                
+                # ✅ NEW: Mark this point as context reset boundary
+                self.conversation_reset_index = len(self.conversation_history)
+                
                 # Check win conditions
                 remaining_agents = [a for a in self.agents if a.name not in self.eliminated_agents]
                 mafia_count = sum(1 for a in remaining_agents if a.role == "mafia")
@@ -376,13 +389,7 @@ class MafiaGame:
                     self.add_message("System", "💀 MAFIA WINS! They equal or outnumber the villagers!", is_system=True)
                     self.stop(winner="mafia")
                 else:
-                    # Continue game - announce new discussion round
-                    remaining_agents = [a for a in self.agents if a.name not in self.eliminated_agents]
-                    self.add_message("System", 
-                        f"💬 New discussion round begins! Remaining players: {', '.join([a.name for a in remaining_agents])}", 
-                        is_system=True)
-                    
-                    # Update the voting counter so next vote happens after 20 more messages
+                    # Update voting counter
                     non_system_messages = [m for m in self.conversation_history if not m.get('is_system')]
                     self.last_voting_message_count = len(non_system_messages)
         
