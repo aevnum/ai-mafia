@@ -3,7 +3,6 @@
 
 import time
 from typing import List, Dict, Optional
-from config import MIN_SPEAK_INTERVAL
 
 class Orchestrator:
     """
@@ -13,9 +12,10 @@ class Orchestrator:
     - Conversation flow (avoid echo chamber)
     """
     
-    def __init__(self):
+    def __init__(self, api_handler):
         self.agent_patience = {}  # Track messages since last speak
         self.patience_threshold = 8  # After 8 messages without speaking, force a turn
+        self.api_handler = api_handler  # Shared API handler for LLM calls
         
     def select_next_speaker(self, agents: List, conversation_history: List[Dict], 
                            eliminated_agents: List[str]) -> Optional[object]:
@@ -40,7 +40,7 @@ class Orchestrator:
         
         last_message = recent_messages[-1]
         last_speaker = last_message.get('agent')
-        last_content = last_message.get('content', '').lower()
+        last_content = last_message.get('content', '')
         
         # RULE 1: If someone was directly accused/mentioned, let them defend
         accused = self._find_accused(last_content, active_agents)
@@ -58,7 +58,7 @@ class Orchestrator:
         available = [a for a in active_agents if a.name != last_speaker]
         
         # RULE 4: Check if conversation is stuck (everyone saying same thing)
-        if self._is_echo_chamber(recent_messages):
+        if self._is_echo_chamber(recent_messages, active_agents):
             # Pick someone who HASN'T spoken recently to break the loop
             quiet_agents = self._get_quiet_agents(available, recent_messages)
             if quiet_agents:
@@ -90,18 +90,52 @@ class Orchestrator:
                 self.agent_patience[agent.name] += 1
     
     def _find_accused(self, message_content: str, active_agents: List) -> Optional[object]:
-        """Find if someone was directly accused in the message"""
-        accusation_keywords = ['vote for', 'suspect', 'accuse', 'mafia', 'lying', 'deflecting']
+        """Find if someone was directly accused/questioned in the message using LLM"""
         
-        # Check if message contains accusation
-        has_accusation = any(keyword in message_content for keyword in accusation_keywords)
-        if not has_accusation:
-            return None
+        # FAST PATH: Check if message mentions any agent names
+        agent_names = [a.name.lower() for a in active_agents]
+        message_lower = message_content.lower()
         
-        # Find which agent was named
-        for agent in active_agents:
-            if agent.name.lower() in message_content:
-                return agent
+        mentions_agent = any(name in message_lower for name in agent_names)
+        
+        if not mentions_agent:
+            return None  # No agent mentioned, skip LLM call
+        
+        # SLOW PATH: Use LLM to accurately determine who is being addressed
+        agent_names_str = ", ".join([a.name for a in active_agents])
+        
+        prompt = f"""Analyze this message from a Mafia game conversation:
+
+MESSAGE: "{message_content}"
+
+ACTIVE PLAYERS: {agent_names_str}
+
+Question: Is this message DIRECTLY addressing, accusing, or questioning a specific player?
+
+Rules:
+- Only return a name if the message is CLEARLY directed AT that person
+- Questions like "Aryan, why did you..." → return "Aryan"
+- Accusations like "I think Jay is lying" → return "Jay"  
+- General discussion like "I agree with what Jay said" → return "none"
+- Mentions in passing → return "none"
+
+Respond with ONLY the player's name, or "none" if not directly addressing anyone.
+
+Your answer (just the name or "none"):"""
+
+        try:
+            response = self.api_handler.generate_response(prompt)
+            
+            if response:
+                response = response.strip().strip('"').strip("'").lower()
+                
+                # Find matching agent
+                for agent in active_agents:
+                    if agent.name.lower() == response:
+                        return agent
+                        
+        except Exception as e:
+            print(f"[ORCHESTRATOR] Error in LLM accusation detection: {e}")
         
         return None
     
@@ -112,15 +146,59 @@ class Orchestrator:
                 return agent
         return None
     
-    def _is_echo_chamber(self, recent_messages: List[Dict]) -> bool:
-        """Detect if everyone is repeating the same point"""
+    def _is_echo_chamber(self, recent_messages: List[Dict], active_agents: List) -> bool:
+        """Detect if everyone is repeating the same point using LLM"""
+        
         if len(recent_messages) < 4:
             return False
         
-        # Check if last 4 messages share common keywords
-        contents = [m['content'].lower() for m in recent_messages[-4:]]
+        # Format last 4 messages for analysis
+        messages_text = "\n".join([
+            f"{msg['agent']}: {msg['content']}"
+            for msg in recent_messages[-4:]
+        ])
         
-        # Simple heuristic: if 3+ messages share 2+ words, it's an echo
+        prompt = f"""Analyze these recent messages from a Mafia game:
+
+{messages_text}
+
+Question: Are these messages an "echo chamber" where everyone is repeating the same point without adding new information?
+
+Signs of echo chamber:
+- Multiple people saying essentially the same thing
+- Just agreeing with each other without new evidence
+- Repeating the same keywords/phrases
+- No progression in the argument
+
+Signs of healthy conversation:
+- New evidence being introduced
+- Different perspectives being shared
+- The discussion is moving forward
+
+Respond with ONLY "yes" if this is an echo chamber, or "no" if the conversation is progressing.
+
+Your answer (just "yes" or "no"):"""
+
+        try:
+            response = self.api_handler.generate_response(prompt)
+            
+            if response:
+                response = response.strip().lower()
+                return response == "yes"
+                
+        except Exception as e:
+            print(f"[ORCHESTRATOR] Error in LLM echo chamber detection: {e}")
+            # Fallback to simple heuristic if LLM fails
+            return self._simple_echo_detection(recent_messages)
+        
+        return False
+    
+    def _simple_echo_detection(self, recent_messages: List[Dict]) -> bool:
+        """Fallback simple echo chamber detection if LLM fails"""
+        if len(recent_messages) < 4:
+            return False
+        
+        contents = [m['content'].lower() for m in recent_messages[-4:]]
         common_words = ['consensus', 'deflecting', 'suspicious', 'evasive', 'agree']
         
         overlap_count = 0

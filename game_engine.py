@@ -33,7 +33,7 @@ class MafiaGame:
         self.last_voting_message_count = 0  # Track when last voting occurred
         self.agents_spoken_this_round = set()  # Track who has spoken in current round
         self.conversation_reset_index = 0  # ✅ NEW: Track where context should reset
-        self.orchestrator = Orchestrator()  # ✅ NEW
+        self.orchestrator = Orchestrator(self.api_handler)  # ✅ NEW
         
         self._initialize_agents()
     
