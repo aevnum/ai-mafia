@@ -166,38 +166,90 @@ class MafiaGame:
         """
         # Get current conversation state
         conversation = self.get_conversation_snapshot()
-        
+
         # SCHEDULER: Decide if agent should speak
         should_speak = agent.scheduler(conversation)
-        
+
         if not should_speak:
             return None
-        
+
         # Mark agent as typing
         agent.is_typing = True
-        
+
         try:
-            # GENERATOR: Create what to say, now pass vote_history for pattern detection
+            # GENERATOR: Create what to say
             prompt = agent.create_prompt(conversation, self.vote_history)
             response = self.api_handler.generate_response(prompt)
-            
+
             if response:
-                # Add message to shared conversation
-                self.add_message(agent.name, response)
-                agent.last_speak_time = time.time()
-                agent.message_count += 1
-                
-                return {
-                    "agent": agent.name,
-                    "content": response,
-                    "role": agent.role
-                }
+                # ✅ NEW: Parse structured response
+                reasoning, actual_message = self._parse_agent_response(response)
+
+                # ✅ Store reasoning privately (for debugging/learning)
+                if reasoning:
+                    agent.add_observation(f"[Internal reasoning]: {reasoning}")
+
+                # ✅ Only the actual message goes to conversation
+                if actual_message:
+                    self.add_message(agent.name, actual_message)
+                    agent.last_speak_time = time.time()
+                    agent.message_count += 1
+
+                    return {
+                        "agent": agent.name,
+                        "content": actual_message,
+                        "role": agent.role,
+                        "reasoning": reasoning  # For potential analysis
+                    }
+                else:
+                    # If no response tag found, use raw output (fallback for opening statements)
+                    self.add_message(agent.name, response)
+                    agent.last_speak_time = time.time()
+                    agent.message_count += 1
+
+                    return {
+                        "agent": agent.name,
+                        "content": response,
+                        "role": agent.role
+                    }
         except Exception as e:
             print(f"Error processing {agent.name}: {e}")
         finally:
             agent.is_typing = False
-        
+
         return None
+
+    def _parse_agent_response(self, response: str) -> tuple[Optional[str], Optional[str]]:
+        """
+        Parse agent response into reasoning (private) and message (public).
+        Returns: (reasoning, message)
+        """
+        import re
+
+        # ✅ Extract reasoning block (private)
+        reasoning_match = re.search(r'<reasoning>(.*?)</reasoning>', response, re.DOTALL | re.IGNORECASE)
+        reasoning = reasoning_match.group(1).strip() if reasoning_match else None
+
+        # ✅ Extract response block (public message)
+        response_match = re.search(r'<response>(.*?)</response>', response, re.DOTALL | re.IGNORECASE)
+        message = response_match.group(1).strip() if response_match else None
+
+        # ✅ Validation: Check if message leaked reasoning
+        if message and reasoning:
+            leak_indicators = ['step 1', 'step 2', 'analyze', 'hypothesis', 'tactic', 'mafia strategy']
+            if any(indicator in message.lower() for indicator in leak_indicators):
+                print(f"⚠️ Agent response leaked reasoning, cleaning...")
+                for indicator in leak_indicators:
+                    message = re.sub(f'.*{indicator}.*', '', message, flags=re.IGNORECASE)
+                message = message.strip()
+
+        # ✅ Fallback: if no tags, treat entire response as message (for opening statements)
+        if not message:
+            clean_response = re.sub(r'<reasoning>.*?</reasoning>', '', response, flags=re.DOTALL | re.IGNORECASE)
+            clean_response = re.sub(r'<response>|</response>', '', clean_response, flags=re.IGNORECASE)
+            message = clean_response.strip() if clean_response.strip() else response
+
+        return reasoning, message
     
     def run_round(self) -> List[Dict]:
         """
@@ -328,25 +380,21 @@ class MafiaGame:
         self.in_voting = False
     
     def conduct_voting(self) -> Dict[str, int]:
-        """Have each agent vote for someone to eliminate, using scratchpad observations and track all votes"""
+        """Have each agent vote for someone to eliminate, using scratchpad observations"""
         votes = {}
-        round_votes = []  # ✅ NEW: Track this round's votes
+        round_votes = []
         active_agents = [a for a in self.agents if a.name not in self.eliminated_agents]
-        
+
         for agent in active_agents:
-            # Create voting prompt
             candidates = [a.name for a in active_agents if a.name != agent.name]
             conversation = self.get_conversation_snapshot()
-            
-            # Get agent's observations from scratchpad for this game
-            observations = "\n".join([f"- {obs['observation']}" for obs in agent.current_game_observations[-5:]]) if agent.current_game_observations else "No observations recorded yet."
-            
-            voting_prompt = f"""You are {agent.name}, a {agent.role} in a Mafia game.
-Based on the conversation so far, vote for ONE person to eliminate and explain why.
 
-CRITICAL: Speak in FIRST PERSON ONLY. Use "I", "me", "my" when expressing your thoughts.
-Example: "I vote for Jay because I noticed..." NOT "{agent.name} votes for Jay because he noticed..."
-Example: "I think Navya is suspicious" NOT "This player thinks Navya is suspicious"
+            observations = "\n".join([f"- {obs['observation']}" 
+                for obs in agent.current_game_observations[-5:]]) if agent.current_game_observations else "No observations recorded yet."
+
+            # ✅ ENFORCE structured voting response
+            voting_prompt = f"""You are {agent.name}, a {agent.role} in a Mafia game.
+Based on the conversation so far, vote for ONE person to eliminate.
 
 Available candidates: {', '.join(candidates)}
 
@@ -356,27 +404,53 @@ YOUR OBSERVATIONS THIS GAME:
 Recent conversation:
 {self._format_conversation(conversation[-VOTING_CONTEXT_SIZE:])}
 
-Respond in this format (in FIRST PERSON):
+You must respond in TWO parts:
+
+PART 1 - ANALYSIS (private reasoning)
+<reasoning>
+- Who is most suspicious based on evidence?
+- What specific patterns did I notice?
+- Who voted with whom in past rounds?
+</reasoning>
+
+PART 2 - YOUR VOTE (public)
+<response>
 VOTE: [name]
-REASON: [your reasoning in one sentence using "I"]"""
+REASON: [one sentence in FIRST PERSON using "I"]
+</response>
+
+CRITICAL: Use "I" in your reason. Example: "I vote for Jay because I noticed..."
+NOT "This player votes..." or "Jay is suspicious because..."
+
+Your response:"""
 
             vote_name = None
             reason = "No reason given"
             try:
                 time.sleep(2)  # Rate limit protection
                 response = self.api_handler.generate_response(voting_prompt)
-                
+
                 if response:
-                    # Parse vote and reason
+                    # ✅ Parse structured response
+                    reasoning, vote_response = self._parse_agent_response(response)
+
+                    # Store reasoning
+                    if reasoning:
+                        agent.add_observation(f"[Voting reasoning]: {reasoning}")
+
+                    # Parse vote from response block
                     vote_name = None
                     reason = "No reason given"
-                    # Extract vote
-                    if "VOTE:" in response:
-                        vote_line = response.split("VOTE:")[1].split("\n")[0].strip()
-                        vote_name = vote_line.strip().strip('"').strip("'").strip('.')
-                    # Extract reason
-                    if "REASON:" in response:
-                        reason = response.split("REASON:")[1].strip().split("\n")[0].strip()
+
+                    if vote_response:
+                        # Extract vote
+                        if "VOTE:" in vote_response:
+                            vote_line = vote_response.split("VOTE:")[1].split("\n")[0].strip()
+                            vote_name = vote_line.strip().strip('"').strip("'").strip('.')
+                        # Extract reason
+                        if "REASON:" in vote_response:
+                            reason = vote_response.split("REASON:")[1].strip().split("\n")[0].strip()
+
                     # Find matching candidate
                     if vote_name:
                         for candidate in candidates:
@@ -385,33 +459,19 @@ REASON: [your reasoning in one sentence using "I"]"""
                                 self.add_message("System", 
                                     f"🗳️ {agent.name} voted for {candidate}. Reason: {reason}", 
                                     is_system=True)
-                                vote_name = candidate  # Normalize to candidate name
-                                break
-                    else:
-                        # Fallback: try to find any candidate name in response
-                        for candidate in candidates:
-                            if candidate.lower() in response.lower():
-                                votes[candidate] = votes.get(candidate, 0) + 1
-                                self.add_message("System", 
-                                    f"🗳️ {agent.name} voted for {candidate}. Reason: {reason}", 
-                                    is_system=True)
-                                vote_name = candidate
                                 break
             except Exception as e:
                 print(f"Error in voting for {agent.name}: {e}")
-            # ✅ NEW: After each vote, store it
             round_votes.append({
                 "voter": agent.name,
                 "target": vote_name,
                 "reason": reason,
                 "round": len(self.vote_history) + 1
             })
-        # ✅ NEW: Save this round (eliminated will be filled in trigger_voting)
-        # We'll update eliminated after voting in trigger_voting
         self.vote_history.append({
             "round": len(self.vote_history) + 1,
             "votes": round_votes,
-            "eliminated": None  # Will be updated after elimination
+            "eliminated": None
         })
         return votes
     

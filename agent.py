@@ -233,128 +233,194 @@ Respond in 2-3 sentences describing your game plan:"""
         return random.random() < base_probability
     
     def create_prompt(self, conversation_history: List[Dict], vote_history: List[Dict] = None) -> str:
-        """Creates structured prompt requiring evidence-based reasoning"""
-        
-        # Format conversation
+        """Creates structured prompt requiring evidence-based reasoning (NO example analysis text)"""
         recent_context = conversation_history[-CONVERSATION_CONTEXT_SIZE:]
         context_str = self._format_conversation(recent_context)
-        
-        # ✅ NEW: Format voting history for pattern detection
         vote_summary = self._format_vote_history(vote_history) if vote_history else "No votes yet."
-        
-        # ✅ NEW: Track who mentioned whom
-        mention_network = self._analyze_mentions(recent_context)
-        
-        # Get active/eliminated players
-        active_players = self._get_active_players(conversation_history)
-        eliminated_players = self._get_eliminated_players(conversation_history)
-        
         personality_desc = self.personality.get("description", "")
         scratchpad_context = self.get_scratchpad_context()
-        
+
+        # Extract active and eliminated players from conversation history
+        active_players = self._extract_active_players(conversation_history)
+        eliminated_players = self._extract_eliminated_players(conversation_history)
+
+        # Determine if this is the start of the game (few non-system messages)
+        non_system_messages = [m for m in conversation_history if not m.get('is_system')]
+        is_game_start = len(non_system_messages) < 3
+
         if self.role == "mafia":
             strategy = self.personality.get("mafia_strategy", "")
-            
-            # ✅ NEW: Structured mafia prompt with evidence requirements
-            prompt = f"""You are {self.name}, a MAFIA member in a Mafia game.
+            if is_game_start:
+                # ✅ Opening prompt - no reasoning needed yet
+                prompt = f"""You are {self.name}, a MAFIA member in a Mafia game.
 
 PERSONALITY: {personality_desc}
-YOUR STRATEGY: {strategy}
+SPEAKING STYLE: {self.personality.get('speaking_style', '')}
 
-ACTIVE PLAYERS: {', '.join(active_players)}
-ELIMINATED: {', '.join(eliminated_players)}
+This is the START of the game. The opening hint was cryptic. Players are nervous.
 
-{scratchpad_context}
+Give a DRAMATIC INTRODUCTORY statement (1-2 sentences) that:
+- Sets your personality tone
+- Responds to the ominous hint
+- Establishes yourself as "helpful" (but you're secretly mafia)
+- NO accusations yet - there's no conversation to analyze
 
-VOTING HISTORY (use this to detect patterns):
-{vote_summary}
-
-WHO MENTIONED WHOM (detect alliances):
-{mention_network}
-
-RECENT CONVERSATION:
-{context_str}
-
----
-MAFIA STRATEGY - THREE STEPS:
-
-STEP 1 - ANALYZE (think, don't write):
-- Who is closest to figuring you out?
-- Which villagers suspect each other?
-- Can you amplify existing conflicts?
-
-STEP 2 - PLAN YOUR MOVE:
-- Option A: Deflect suspicion by accusing someone with SPECIFIC evidence
-- Option B: Defend a villager to gain trust
-- Option C: Create chaos by highlighting contradictions
-- Choose ONE option based on current situation
-
-STEP 3 - EXECUTE:
-Write 1-2 sentences that:
-✓ Reference SPECIFIC recent events (e.g., "Jay voted for Aryan last round")
-✓ Use your personality ({personality_desc})
-✓ Sound like a helpful villager, not defensive mafia
-✗ Don't repeat phrases from your last 3 messages
-✗ Don't say "deflecting" or "suspicious" - be subtle
-
-CRITICAL: Speak in FIRST PERSON. Use "I noticed..." not "X noticed..."
-Use REAL names from active players list.
+Speak in FIRST PERSON only. Use "I", "me", "my".
 
 Your response:"""
-
-        else:  # villager
-            strategy = self.personality.get("villager_strategy", "")
-            
-            # ✅ NEW: Structured villager prompt with detective work
-            prompt = f"""You are {self.name}, a VILLAGER in a Mafia game.
+            else:
+                # ✅ Mid-game - ENFORCE reasoning blocks
+                prompt = f"""You are {self.name}, a MAFIA member in a Mafia game.
 
 PERSONALITY: {personality_desc}
-YOUR STRATEGY: {strategy}
+STRATEGY: {strategy}
 
 ACTIVE PLAYERS: {', '.join(active_players)}
 ELIMINATED: {', '.join(eliminated_players)}
 
 {scratchpad_context}
 
-VOTING HISTORY (find patterns):
+VOTING HISTORY:
 {vote_summary}
-
-WHO MENTIONED WHOM:
-{mention_network}
 
 RECENT CONVERSATION:
 {context_str}
 
----
-DETECTIVE WORK - THREE STEPS:
+===== YOUR TURN =====
 
-STEP 1 - GATHER EVIDENCE (think, don't write):
-Look for these MAFIA TELLS:
+You must respond in TWO parts:
+
+PART 1 - REASONING (private, not shown to others)
+Analyze the situation between <reasoning> tags:
+<reasoning>
+- Who is closest to figuring me out?
+- Which villagers suspect each other? 
+- Can I amplify existing conflicts?
+- Which tactic should I use: (A) Deflect by accusing someone, (B) Defend a villager, (C) Create chaos?
+- What SPECIFIC evidence from above supports my move?
+</reasoning>
+
+PART 2 - RESPONSE (public message to other players)
+Write your actual message between <response> tags:
+<response>
+[Your 1-2 sentence message here]
+</response>
+
+RULES FOR YOUR RESPONSE:
+✓ Reference SPECIFIC recent events (names, votes, statements from conversation above)
+✓ Use FIRST PERSON ("I noticed..." not "{self.name} noticed...")
+✓ Use ONLY names from ACTIVE PLAYERS list: {', '.join(active_players)}
+✓ Sound helpful, not defensive
+✗ Don't use words "deflecting" "suspicious" "mafia" - be subtle
+✗ Don't repeat phrases from your last messages
+
+Your full response (both parts):"""
+        else:
+            strategy = self.personality.get("villager_strategy", "")
+            if is_game_start:
+                # ✅ Opening prompt - no reasoning needed yet
+                prompt = f"""You are {self.name}, a VILLAGER in a Mafia game.
+
+PERSONALITY: {personality_desc}
+SPEAKING STYLE: {self.personality.get('speaking_style', '')}
+
+This is the START of the game. The opening hint was cryptic. You need to find the mafia.
+
+Give a DRAMATIC INTRODUCTORY statement (1-2 sentences) that:
+- Sets your personality tone
+- Shows your investigative mindset
+- Responds to the hint
+- NO accusations yet - there's no conversation to analyze
+
+Speak in FIRST PERSON only. Use "I", "me", "my".
+
+Your response:"""
+            else:
+                # ✅ Mid-game - ENFORCE reasoning blocks
+                prompt = f"""You are {self.name}, a VILLAGER in a Mafia game.
+
+PERSONALITY: {personality_desc}
+STRATEGY: {strategy}
+
+ACTIVE PLAYERS: {', '.join(active_players)}
+ELIMINATED: {', '.join(eliminated_players)}
+
+{scratchpad_context}
+
+VOTING HISTORY (look for patterns):
+{vote_summary}
+
+RECENT CONVERSATION:
+{context_str}
+
+===== YOUR TURN =====
+
+You must respond in TWO parts:
+
+PART 1 - DETECTIVE WORK (private analysis, not shown to others)
+Write your investigation between <reasoning> tags:
+<reasoning>
+EVIDENCE GATHERING - Look for:
 - Who voted together in multiple rounds?
 - Who defends each other without reason?
-- Who changes the subject when someone makes a good point?
+- Who changes subject when probed?
 - Who asks questions but never answers them?
 - Whose accusations lack specific evidence?
 
-STEP 2 - FORM HYPOTHESIS:
-Based on evidence above, which 2 players are most likely mafia?
-What specific pattern supports this?
+HYPOTHESIS:
+- Based on evidence above, who are the 2 most likely mafia?
+- What specific pattern supports this?
 
-STEP 3 - TEST YOUR THEORY:
-Write 1-2 sentences that:
-✓ Call out a SPECIFIC behavior with EVIDENCE (e.g., "Kshitij voted with Khushi in rounds 1 AND 2")
-✓ Ask a pointed question to expose lies
-✓ Build on someone else's observation if it's good
-✓ Use your personality ({personality_desc})
-✗ Don't just say "you're deflecting" - cite what they deflected FROM
-✗ Don't repeat your last 3 messages
+MY MOVE:
+- What specific behavior will I call out?
+- What evidence from the conversation supports this?
+</reasoning>
 
-CRITICAL: Speak in FIRST PERSON. Use "I saw..." not "Laavanya saw..."
-Always use REAL names from active players list.
+PART 2 - YOUR MESSAGE (public statement to other players)
+Write your actual message between <response> tags:
+<response>
+[Your 1-2 sentence message here]
+</response>
 
-Your response:"""
-        
+RULES FOR YOUR MESSAGE:
+✓ Call out SPECIFIC behavior with EVIDENCE (cite what they said/did)
+✓ Ask pointed questions to expose lies
+✓ Use FIRST PERSON ("I saw..." not "{self.name} saw...")
+✓ Use ONLY names from ACTIVE PLAYERS list: {', '.join(active_players)}
+✗ Don't just say "deflecting" - cite what they deflected FROM
+✗ Don't repeat your last messages
+
+Your full response (both parts):"""
         return prompt
+
+    def _extract_active_players(self, conversation_history: List[Dict]) -> List[str]:
+        """Extract active (non-eliminated) players from conversation history"""
+        all_players = set()
+        eliminated = set()
+        for msg in conversation_history:
+            if not msg.get('is_system') and msg.get('agent'):
+                all_players.add(msg['agent'])
+            if msg.get('is_system') and '❌' in msg.get('content', ''):
+                content = msg['content']
+                try:
+                    name = content.split('❌')[1].split('has been eliminated')[0].strip()
+                    eliminated.add(name)
+                except Exception:
+                    pass
+        return sorted(list(all_players - eliminated))
+
+    def _extract_eliminated_players(self, conversation_history: List[Dict]) -> List[str]:
+        """Extract eliminated players from conversation history"""
+        eliminated = []
+        for msg in conversation_history:
+            if msg.get('is_system') and '❌' in msg.get('content', ''):
+                try:
+                    name = msg['content'].split('❌')[1].split('has been eliminated')[0].strip()
+                    if name not in eliminated:
+                        eliminated.append(name)
+                except Exception:
+                    pass
+        return eliminated
 
 
     # ✅ NEW: Helper functions for structured prompts
