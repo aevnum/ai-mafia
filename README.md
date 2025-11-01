@@ -1,1 +1,1 @@
-# pr-reviewer-solver-bot
+# ai-mafia
