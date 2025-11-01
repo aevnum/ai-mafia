@@ -162,7 +162,7 @@ class MafiaGame:
         with self.lock:
             return self.conversation_history.copy()
     
-    def process_agent_turn(self, agent: Agent, is_impatient_turn: bool = False) -> Optional[Dict]:
+    def process_agent_turn(self, agent: Agent, is_impatient_turn: bool = False, is_mediator_turn: bool = False) -> Optional[Dict]:
         """
         Process agent's turn (orchestrator already decided they should speak).
         Returns message dict.
@@ -179,7 +179,8 @@ class MafiaGame:
                 conversation, 
                 self.vote_history, 
                 context_reset_index=self.conversation_reset_index,
-                is_impatient_turn=is_impatient_turn
+                is_impatient_turn=is_impatient_turn,
+                is_mediator_turn=is_mediator_turn
             )
             response = self.api_handler.generate_response(prompt)
 
@@ -187,9 +188,9 @@ class MafiaGame:
                 # ✅ NEW: Parse structured response
                 reasoning, actual_message = self._parse_agent_response(response)
 
-                # ✅ Store reasoning privately (for debugging/learning)
+                # ✅ Store reasoning for end-game analysis
                 if reasoning:
-                    agent.add_observation(f"[Internal reasoning]: {reasoning}")
+                    agent.add_reasoning(reasoning)
 
                 # ✅ Only the actual message goes to conversation
                 if actual_message:
@@ -293,15 +294,18 @@ class MafiaGame:
         
         # Check if this is an impatient turn
         is_impatient = self.orchestrator.is_impatient_turn(next_speaker.name)
-        
+        # Check if this is a mediator turn
+        is_mediator = self.orchestrator.is_mediator_turn(next_speaker.name, self.conversation_history)
         # Add delay to avoid rate limits
         time.sleep(2)
-        
         # Process the selected agent's turn
-        message = self.process_agent_turn(next_speaker, is_impatient_turn=is_impatient)
+        message = self.process_agent_turn(
+            next_speaker, 
+            is_impatient_turn=is_impatient,
+            is_mediator_turn=is_mediator
+        )
         if message:
             round_messages.append(message)
-        
         return round_messages
     
     def trigger_voting(self):
@@ -598,86 +602,54 @@ Respond with ONLY the word you want removed, nothing else."""
     
     def _generate_agent_learnings(self, agent: Agent, won: bool, full_conversation: List[Dict]) -> None:
         """
-        Let agent analyze the full game conversation and generate their own strategic learnings.
+        Analyze agent's reasoning throughout the game and combine with testimonial.
         NO player names should be mentioned - only strategies and tactics.
         """
-        # Format conversation for analysis
-        conversation_text = self._format_conversation(full_conversation)
+        # Get agent's reasoning from throughout the game
+        reasoning_summary = "\n".join(agent.current_game_reasoning[-10:]) if agent.current_game_reasoning else "No reasoning captured."
         
-        # Get agent's messages only
+        # Get agent's public messages
         agent_messages = [msg['content'] for msg in full_conversation if msg.get('agent') == agent.name and not msg.get('is_system')]
         
         outcome = "WON" if won else "LOST"
         
         learning_prompt = f"""You are {agent.name}, a {agent.role.upper()} who just {outcome} a Mafia game.
 
-Your personality: {agent.personality.get('description', '')}
-You spoke {agent.message_count} times during this game.
-Previous games played: {agent.scratchpad.get('games_played', 0)}
+YOUR INTERNAL REASONING THROUGHOUT THE GAME:
+{reasoning_summary}
 
-FULL GAME CONVERSATION (for your analysis):
-{conversation_text[:3000]}  
+YOUR PUBLIC MESSAGES:
+{chr(10).join(agent_messages[-5:])}
 
-YOUR MESSAGES DURING THIS GAME:
-{chr(10).join(agent_messages[:10])}
+Based on your reasoning and how the game played out, summarize your strategy in ONE sentence.
 
-Analyze this game and extract strategic learnings for FUTURE games.
+CRITICAL RULES:
+- NO player names (no "Jay", "Aryan", etc.)
+- Describe WHAT you did, not WHO you targeted
+- Use generic terms: "allies", "suspects", "the accused"
+- Focus on tactics: "deflected", "built alliances", "analyzed patterns", etc.
 
-CRITICAL RULES FOR YOUR ANALYSIS:
-1. DO NOT mention ANY specific player names (no "Jay", "Aryan", etc.)
-2. Focus ONLY on strategies, tactics, and behavioral patterns
-3. Use generic terms: "my allies", "the villagers", "suspicious players", "the accused"
-4. Describe WHAT worked or didn't work, not WHO you interacted with
+Example: "Deflected suspicion by aggressively questioning others while building consensus with quieter players"
 
-Generate 3 sections:
-
-STRATEGY_USED: Describe the overall strategy you employed this game (1 sentence, no names)
-Example: "Deflected suspicion by questioning others aggressively early in the game"
-
-WHAT_WORKED: What tactics were effective? (1 sentence, no names)
-Example: "Creating confusion by rapidly shifting focus between multiple suspects"
-
-WHAT_FAILED: What should you avoid or improve? (1 sentence, no names) 
-Example: "Being too quiet in early rounds made me appear suspicious later"
-
-Respond ONLY in this format:
-STRATEGY_USED: [your strategy]
-WHAT_WORKED: [what worked]
-WHAT_FAILED: [what to avoid/improve]"""
+Your strategy summary (ONE SENTENCE):"""
 
         try:
-            time.sleep(2)  # Rate limit protection
+            time.sleep(2)
             response = self.api_handler.generate_response(learning_prompt)
             
             if response:
-                # Parse response
-                strategy_used = "Standard play"
-                what_worked = "No clear successes identified"
-                what_failed = "No clear failures identified"
+                strategy_summary = response.strip()
                 
-                if "STRATEGY_USED:" in response:
-                    strategy_used = response.split("STRATEGY_USED:")[1].split("\n")[0].strip()
-                if "WHAT_WORKED:" in response:
-                    what_worked = response.split("WHAT_WORKED:")[1].split("\n")[0].strip()
-                if "WHAT_FAILED:" in response:
-                    what_failed = response.split("WHAT_FAILED:")[1].split("\n")[0].strip()
+                # Update scratchpad with simple role + strategy
+                agent.update_strategy(agent.role, strategy_summary)
                 
-                # Create learning summary
-                if won:
-                    lesson = f"✅ {outcome} as {agent.role}: {what_worked}"
-                else:
-                    lesson = f"❌ {outcome} as {agent.role}: {what_failed}"
-                
-                # Update agent's scratchpad with AI-generated learnings
-                agent.update_strategy(won, agent.role, strategy_used, lesson)
-                
-                print(f"[LEARNING] {agent.name}: {lesson[:100]}...")
+                print(f"[SCRATCHPAD] {agent.name} ({agent.role}): {strategy_summary}")
                 
         except Exception as e:
             print(f"Error generating learnings for {agent.name}: {e}")
-            # Fallback to simple update
-            simple_lesson = f"{'Won' if won else 'Lost'} as {agent.role} - spoke {agent.message_count} times"
-            agent.update_strategy(won, agent.role, f"As {agent.role}", simple_lesson)
+            # Fallback
+            simple_summary = f"{'Won' if won else 'Lost'} by speaking {agent.message_count} times"
+            agent.update_strategy(agent.role, simple_summary)
         
     def get_agent_states(self) -> List[Dict]:
         """Get current state of all agents"""

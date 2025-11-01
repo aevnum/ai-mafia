@@ -40,70 +40,60 @@ class Agent:
         self.personality = get_personality(name)
         
         # Scratchpad system
-        self.scratchpad_path = os.path.join("scratchpads", f"{name.lower()}_scratchpad.json")
+        self.scratchpad_path = os.path.join("scratchpads", f"{name.lower()}_scratchpad.txt")
         self.scratchpad = self.load_scratchpad()
         self.current_game_observations = []  # Observations from current game
+        self.current_game_reasoning = []  # Store reasoning from each turn
         
     def load_scratchpad(self) -> dict:
-        """Load agent's persistent scratchpad from JSON file"""
+        """Load agent's persistent scratchpad from YAML-like text file"""
         if os.path.exists(self.scratchpad_path):
             try:
                 with open(self.scratchpad_path, 'r') as f:
-                    return json.load(f)
+                    content = f.read()
+                    # Parse simple YAML-like format
+                    scratchpad = {
+                        "strategies": []
+                    }
+                    current_strategy = None
+                    for line in content.split('\n'):
+                        line = line.strip()
+                        if line.startswith('- role:'):
+                            if current_strategy:
+                                scratchpad["strategies"].append(current_strategy)
+                            current_strategy = {"role": line.split('role:')[1].strip()}
+                        elif line.startswith('strategy:') and current_strategy:
+                            current_strategy["strategy"] = line.split('strategy:', 1)[1].strip()
+                    if current_strategy:
+                        scratchpad["strategies"].append(current_strategy)
+                    return scratchpad
             except Exception as e:
                 print(f"Error loading scratchpad for {self.name}: {e}")
         
         # Initialize new scratchpad
-        return {
-            "games_played": 0,
-            "games_won": 0,
-            "games_lost": 0,
-            "times_as_mafia": 0,
-            "times_as_villager": 0,
-            "successful_strategies": [],
-            "failed_strategies": [],
-            "lessons_learned": [],
-            "behavior_notes": ""
-        }
+        return {"strategies": []}
     
     def save_scratchpad(self):
-        """Save agent's scratchpad to JSON file"""
+        """Save agent's scratchpad to simple YAML-like text file"""
         try:
             os.makedirs("scratchpads", exist_ok=True)
             with open(self.scratchpad_path, 'w') as f:
-                json.dump(self.scratchpad, f, indent=2)
+                for strategy in self.scratchpad.get("strategies", []):
+                    f.write(f"- role: {strategy['role']}\n")
+                    f.write(f"  strategy: {strategy['strategy']}\n")
         except Exception as e:
             print(f"Error saving scratchpad for {self.name}: {e}")
     
-    def update_strategy(self, won: bool, role_was: str, strategy_used: str, what_learned: str):
-        """Update scratchpad after a game ends"""
-        self.scratchpad["games_played"] += 1
+    def update_strategy(self, role_was: str, strategy_summary: str):
+        """Update scratchpad after a game ends - simplified"""
+        self.scratchpad["strategies"].append({
+            "role": role_was,
+            "strategy": strategy_summary
+        })
         
-        if won:
-            self.scratchpad["games_won"] += 1
-            self.scratchpad["successful_strategies"].append({
-                "role": role_was,
-                "strategy": strategy_used,
-                "learned": what_learned
-            })
-        else:
-            self.scratchpad["games_lost"] += 1
-            self.scratchpad["failed_strategies"].append({
-                "role": role_was,
-                "strategy": strategy_used,
-                "learned": what_learned
-            })
-        
-        if role_was == "mafia":
-            self.scratchpad["times_as_mafia"] += 1
-        else:
-            self.scratchpad["times_as_villager"] += 1
-        
-        self.scratchpad["lessons_learned"].append(what_learned)
-        
-        # Keep only last 10 lessons to avoid bloat
-        if len(self.scratchpad["lessons_learned"]) > 10:
-            self.scratchpad["lessons_learned"] = self.scratchpad["lessons_learned"][-10:]
+        # Keep only last 5 strategies to avoid bloat
+        if len(self.scratchpad["strategies"]) > 5:
+            self.scratchpad["strategies"] = self.scratchpad["strategies"][-5:]
         
         self.save_scratchpad()
     
@@ -113,6 +103,10 @@ class Agent:
             "time": time.time(),
             "observation": observation
         })
+    
+    def add_reasoning(self, reasoning: str):
+        """Store reasoning from agent's turn"""
+        self.current_game_reasoning.append(reasoning)
     
     def formulate_game_strategy(self) -> str:
         """
@@ -156,49 +150,31 @@ Respond in 2-3 sentences describing your game plan:"""
         
     def get_scratchpad_context(self) -> str:
         """Get relevant context from scratchpad for prompts - UNIQUE PER AGENT"""
-        if not self.scratchpad["lessons_learned"]:
+        if not self.scratchpad.get("strategies"):
             return "This is your first game. Play smart and learn from every interaction!"
         
-        # Get personalized learning based on role experience
-        lessons = self.scratchpad["lessons_learned"][-3:]  # Last 3 lessons
+        # Get last 3 strategies
+        strategies = self.scratchpad["strategies"][-3:]
         
-        # Get role-specific successful strategies
-        if self.role == "mafia":
-            successful = [s for s in self.scratchpad["successful_strategies"] if s["role"] == "mafia"][-2:]
-            failed = [f for f in self.scratchpad["failed_strategies"] if f["role"] == "mafia"][-2:]
+        # Filter by current role if possible
+        role_strategies = [s for s in strategies if s["role"] == self.role]
+        
+        if role_strategies:
+            context = f"YOUR PAST EXPERIENCE AS {self.role.upper()}:\n"
+            for s in role_strategies:
+                context += f"- {s['strategy']}\n"
         else:
-            successful = [s for s in self.scratchpad["successful_strategies"] if s["role"] == "villager"][-2:]
-            failed = [f for f in self.scratchpad["failed_strategies"] if f["role"] == "villager"][-2:]
-        
-        # Build unique context based on THIS agent's history
-        context = f"YOUR PAST EXPERIENCE ({self.scratchpad['games_played']} games, {self.scratchpad['games_won']} wins):\n"
-        
-        if lessons:
-            context += "What you've learned: " + "; ".join(lessons) + "\n"
-        
-        if successful:
-            context += "Strategies that worked for YOU as " + self.role.upper() + ": "
-            context += "; ".join([s["strategy"] for s in successful]) + "\n"
-        
-        if failed:
-            context += "What FAILED for you as " + self.role.upper() + ": "
-            context += "; ".join([f["strategy"] for f in failed]) + "\n"
-            context += "AVOID repeating these mistakes!\n"
-        
-        # Add role-specific stats
-        if self.role == "mafia":
-            mafia_winrate = (self.scratchpad["games_won"] / self.scratchpad["games_played"] * 100) if self.scratchpad["games_played"] > 0 else 0
-            context += f"Your mafia win rate: {mafia_winrate:.0f}% ({self.scratchpad['times_as_mafia']} games as mafia)\n"
-        else:
-            villager_winrate = (self.scratchpad["games_won"] / self.scratchpad["games_played"] * 100) if self.scratchpad["games_played"] > 0 else 0
-            context += f"Your villager win rate: {villager_winrate:.0f}% ({self.scratchpad['times_as_villager']} games as villager)\n"
+            context = f"YOUR PAST EXPERIENCE:\n"
+            for s in strategies:
+                context += f"- As {s['role']}: {s['strategy']}\n"
         
         return context
         
     
 
     def create_prompt(self, conversation_history: List[Dict], vote_history: List[Dict] = None, 
-                      context_reset_index: int = 0, is_impatient_turn: bool = False) -> str:
+                      context_reset_index: int = 0, is_impatient_turn: bool = False,
+                      is_mediator_turn: bool = False) -> str:
         """Creates structured prompt requiring evidence-based reasoning"""
         
         # ADD this special instruction for impatient turns:
@@ -211,6 +187,21 @@ Give YOUR FRESH PERSPECTIVE on the current situation.
 - Don't just agree with what others said
 - What do YOU uniquely observe?
 - Bring a NEW angle to the discussion
+
+"""
+
+        # Mediator instruction
+        mediator_instruction = ""
+        if is_mediator_turn:
+            mediator_instruction = """
+🎯 SPECIAL SITUATION: Two players are arguing in circles.
+
+You need to BREAK THE STALEMATE by:
+- Picking a side in their debate (who do you believe?)
+- Bringing NEW evidence they haven't mentioned
+- Shifting focus to something they're both missing
+
+DO NOT just summarize their argument - add YOUR perspective!
 
 """
 
@@ -252,7 +243,6 @@ Give YOUR FRESH PERSPECTIVE on the current situation.
         if self.role == "mafia":
             strategy = self.personality.get("mafia_strategy", "")
             if is_game_start:
-                # Opening prompt - no reasoning needed yet
                 prompt = f"""You are {self.name}, a MAFIA member in a Mafia game.
 
 PERSONALITY: {personality_desc}
@@ -273,13 +263,12 @@ Speak in FIRST PERSON only. Use "I", "me", "my".
 
 Your response:"""
             else:
-                # Mid-game - Use simplified, explicit structured format
                 prompt = f"""You are {self.name}, a MAFIA member in a Mafia game.
 
 ACTIVE PLAYERS: {', '.join(active_players)}
 ELIMINATED: {', '.join(eliminated_players)}
 
-{summary_injection}  # ✅ NEW: Inject summary instead of full history
+{summary_injection}
 
 {scratchpad_context}
 
@@ -287,7 +276,7 @@ CURRENT DISCUSSION (post-voting):
 {context_str}
 
 ===== YOUR TURN =====
-{impatience_instruction}
+{impatience_instruction}{mediator_instruction}
 INSTRUCTION: Respond in this EXACT format. Do not deviate:
 
 <reasoning>
@@ -310,7 +299,6 @@ Your formatted response:"""
         else:
             strategy = self.personality.get("villager_strategy", "")
             if is_game_start:
-                # Opening prompt - no reasoning needed yet
                 prompt = f"""You are {self.name}, a VILLAGER in a Mafia game.
 
 PERSONALITY: {personality_desc}
@@ -331,7 +319,6 @@ Speak in FIRST PERSON only. Use "I", "me", "my".
 
 Your response:"""
             else:
-                # Mid-game - Use simplified, explicit structured format
                 prompt = f"""You are {self.name}, a VILLAGER in a Mafia game.
 
 {scratchpad_context}
@@ -340,7 +327,7 @@ CURRENT DISCUSSION (post-voting):
 {context_str}
 
 ===== YOUR TURN =====
-{impatience_instruction}
+{impatience_instruction}{mediator_instruction}
 INSTRUCTION: Respond in this EXACT format. Do not deviate:
 
 <reasoning>

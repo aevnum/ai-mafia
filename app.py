@@ -211,107 +211,92 @@ if not st.session_state.game:
     st.info("👈 Configure settings in the sidebar and click **Start Game** to begin!")
     
     st.markdown("""
-    ## About This Project
-    
-    **AI Mafia** uses a central **Orchestrator** to manage the flow of conversation. Instead of each agent deciding when to speak, the Orchestrator:
-    
-    - Gives defense priority to accused agents
-    - Forces quiet agents to speak if they've been silent too long
-    - Detects echo chambers and breaks repetitive loops
-    - Prevents the same agent from speaking twice in a row
-    
-    This leads to more realistic, dynamic, and unpredictable conversations—just like a real Mafia game!
-    
+    ## 🕵️‍♂️ About This Project
+
+    **🤖 AI Mafia** uses a central **🎛️ Orchestrator** to manage the flow of conversation.
+    Instead of each agent deciding when to speak, the Orchestrator:
+
+    * 🛡️ Gives **defense priority** to accused agents
+    * 💬 Forces **quiet agents** to speak if they've been silent too long
+    * 🔁 Detects **echo chambers** and breaks repetitive loops
+    * 🚫 Prevents the **same agent** from speaking twice in a row
+
+    This leads to more **realistic, dynamic, and unpredictable** conversations — just like a real Mafia game! 🎭
+
     Each agent has:
-    1. **Orchestrator**: Decides *who* speaks next, based on context and fairness
-    2. **Generator**: Crafts context-aware, evidence-based responses
-    3. **Personality & Memory**: Unique traits and learning from past games
-    
-    Agents interrupt, defend, accuse, and strategize in a lifelike social deduction simulation.
-    """)
+
+    1. 🧠 **Orchestrator** - Decides *who* speaks next, based on context and fairness
+    2. 💬 **Generator** - Crafts **context-aware, evidence-based** responses
+    3. 😎 **Personality & Memory** - Unique traits and learning from past games
+
+    Agents **interrupt**, **defend**, **accuse**, and **strategize** in a lifelike social deduction simulation. 🔍🕵️‍♀️
+                """)
 
 else:
-    # Game is active - show conversation and agents
+    # Game is active - show conversation and agents side by side, always visible
     col1, col2 = st.columns([2, 1])
-    
+
+    # Conversation column
     with col1:
         st.subheader("💬 Conversation")
-        
-        # Display conversation first (live updates)
         conversation_container = st.container(height=600)
         with conversation_container:
             for msg in st.session_state.game.conversation_history:
                 if msg.get('is_system'):
-                    # Special styling for hints and wills
                     content = msg["content"]
                     msg_class = "system-msg"
-                    
                     if "OPENING HINT:" in content:
                         msg_class = "hint-msg"
                     elif "LAST WILL:" in content:
                         msg_class = "will-msg"
                     elif "WILL EDITED" in content:
                         msg_class = "edited-will-msg"
-                    
                     st.markdown(
                         f'<div class="message-box {msg_class}">🔔 <strong>System:</strong> {content}</div>',
                         unsafe_allow_html=True
                     )
                 else:
-                    # Get agent role
                     agent = next((a for a in st.session_state.game.agents if a.name == msg['agent']), None)
                     role_class = "mafia-msg" if agent and agent.role == "mafia" else "villager-msg"
                     role_badge = "🔴 MAFIA" if agent and agent.role == "mafia" else "🔵 VILLAGER"
-                    
                     st.markdown(
-                        f'<div class="message-box {role_class}">'
+                        f'<div class="message-box {role_class}">' 
                         f'<strong>{msg["agent"]}</strong> <small>({role_badge})</small><br>'
                         f'{msg["content"]}'
                         f'</div>',
                         unsafe_allow_html=True
                     )
-        
         # Auto-run rounds at the end so conversation shows first
         if st.session_state.game_running and st.session_state.game.is_running:
             with st.spinner("Agents thinking..."):
                 try:
-                    # Run a round
                     round_messages = st.session_state.game.run_round()
                     if round_messages:
                         st.session_state.round_count += 1
-                    
-                    # Check if game was stopped during the round (win condition)
                     if not st.session_state.game.is_running:
                         st.session_state.game_running = False
                         st.success("🎮 Game ended! Check the conversation for results.")
                         st.rerun()
-                        
                 except Exception as e:
                     st.warning(f"⚠️ Rate limit or API error. Game will retry automatically.")
                     print(f"Error in game round: {e}")
-            
-            # Small delay before rerun
             time.sleep(1)
             st.rerun()
-    
+
+    # Agents column (always visible, not inside spinner)
     with col2:
         st.subheader("👥 Agents")
-        
         agent_states = st.session_state.game.get_agent_states()
         eliminated = st.session_state.game.eliminated_agents
-        
         for agent_state in agent_states:
             role_emoji = "🔴" if agent_state['role'] == "mafia" else "🔵"
             typing_class = "typing" if agent_state['is_typing'] else ""
             typing_indicator = " ✍️ typing..." if agent_state['is_typing'] else ""
-            
-            # Show eliminated agents differently
             is_eliminated = agent_state['name'] in eliminated
             eliminated_style = "opacity: 0.4; text-decoration: line-through;" if is_eliminated else ""
             eliminated_badge = " ❌ ELIMINATED" if is_eliminated else ""
-            
             st.markdown(
-                f'<div class="agent-card {typing_class}" style="{eliminated_style}">'
+                f'<div class="agent-card {typing_class}" style="{eliminated_style}">' 
                 f'{role_emoji} <strong>{agent_state["name"]}</strong>{typing_indicator}{eliminated_badge}<br>'
                 f'<small>Messages: {agent_state["message_count"]}</small>'
                 f'</div>',
