@@ -1,8 +1,8 @@
 {
-  "games_played": 1,
+  "games_played": 2,
   "games_won": 1,
-  "games_lost": 0,
-  "times_as_mafia": 0,
+  "games_lost": 1,
+  "times_as_mafia": 1,
   "times_as_villager": 1,
   "successful_strategies": [
     {
@@ -11,9 +11,16 @@
       "learned": "Won as villager! My deduction worked. Spoke 14 times. Keep questioning."
     }
   ],
-  "failed_strategies": [],
+  "failed_strategies": [
+    {
+      "role": "mafia",
+      "strategy": "As mafia: Question villagers to create paranoia, cast doubt on everyone, appear skeptical of all",
+      "learned": "Lost as mafia. Was I too obvious? Spoke 19 times. Need to blend better."
+    }
+  ],
   "lessons_learned": [
-    "Won as villager! My deduction worked. Spoke 14 times. Keep questioning."
+    "Won as villager! My deduction worked. Spoke 14 times. Keep questioning.",
+    "Lost as mafia. Was I too obvious? Spoke 19 times. Need to blend better."
   ],
   "behavior_notes": ""
 }

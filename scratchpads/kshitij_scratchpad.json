@@ -1,19 +1,25 @@
 {
-  "games_played": 1,
-  "games_won": 1,
+  "games_played": 2,
+  "games_won": 2,
   "games_lost": 0,
   "times_as_mafia": 0,
-  "times_as_villager": 1,
+  "times_as_villager": 2,
   "successful_strategies": [
     {
       "role": "villager",
       "strategy": "As villager: Rally villagers, build consensus, lead investigations",
       "learned": "Won as villager! My deduction worked. Spoke 12 times. Keep questioning."
+    },
+    {
+      "role": "villager",
+      "strategy": "As villager: Rally villagers, build consensus, lead investigations",
+      "learned": "Won as villager! My deduction worked. Spoke 18 times. Keep questioning."
     }
   ],
   "failed_strategies": [],
   "lessons_learned": [
-    "Won as villager! My deduction worked. Spoke 12 times. Keep questioning."
+    "Won as villager! My deduction worked. Spoke 12 times. Keep questioning.",
+    "Won as villager! My deduction worked. Spoke 18 times. Keep questioning."
   ],
   "behavior_notes": ""
 }

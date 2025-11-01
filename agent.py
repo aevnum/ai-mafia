@@ -6,7 +6,7 @@ import random
 import json
 import os
 from typing import List, Dict, Optional
-from config import MIN_SPEAK_INTERVAL
+from config import MIN_SPEAK_INTERVAL, SUSPICIOUS_BEHAVIORS, CONVERSATION_CONTEXT_SIZE
 from personalities import get_personality
 
 
@@ -104,20 +104,85 @@ class Agent:
             "time": time.time(),
             "observation": observation
         })
+    
+    def formulate_game_strategy(self) -> str:
+        """
+        At game start, agent reviews their scratchpad and formulates a strategy.
+        This makes each agent's behavior unique based on their history.
+        """
+        scratchpad_review = self.get_scratchpad_context()
+        personality_traits = ", ".join(self.personality.get("traits", []))
+        
+        if self.role == "mafia":
+            strategy_prompt = f"""You are {self.name}, a MAFIA member starting a new Mafia game.
+
+YOUR PERSONALITY: {personality_traits}
+{self.personality.get("description", "")}
+
+{scratchpad_review}
+
+Based on your personality and past experience, what's your strategy for THIS game as mafia?
+How will you deceive, deflect, and manipulate to win?
+Be specific about what worked/failed for you before.
+
+Respond in 2-3 sentences describing your game plan:"""
+        else:
+            strategy_prompt = f"""You are {self.name}, a VILLAGER starting a new Mafia game.
+
+YOUR PERSONALITY: {personality_traits}
+{self.personality.get("description", "")}
+
+{scratchpad_review}
+
+Based on your personality and past experience, what's your strategy for THIS game as villager?
+How will you identify mafia through analysis and questioning?
+Be specific about what worked/failed for you before.
+
+Respond in 2-3 sentences describing your game plan:"""
+        
+        # This strategy is internalized by the agent (not shared publicly)
+        # but influences their behavior throughout the game
+        return strategy_prompt  # Returns the prompt for potential future use
+    
         
     def get_scratchpad_context(self) -> str:
-        """Get relevant context from scratchpad for prompts"""
+        """Get relevant context from scratchpad for prompts - UNIQUE PER AGENT"""
         if not self.scratchpad["lessons_learned"]:
-            return "This is your first game, play smart!"
+            return "This is your first game. Play smart and learn from every interaction!"
         
+        # Get personalized learning based on role experience
         lessons = self.scratchpad["lessons_learned"][-3:]  # Last 3 lessons
-        successful = self.scratchpad["successful_strategies"][-2:] if self.scratchpad["successful_strategies"] else []
         
-        context = "Based on your past games:\n"
+        # Get role-specific successful strategies
+        if self.role == "mafia":
+            successful = [s for s in self.scratchpad["successful_strategies"] if s["role"] == "mafia"][-2:]
+            failed = [f for f in self.scratchpad["failed_strategies"] if f["role"] == "mafia"][-2:]
+        else:
+            successful = [s for s in self.scratchpad["successful_strategies"] if s["role"] == "villager"][-2:]
+            failed = [f for f in self.scratchpad["failed_strategies"] if f["role"] == "villager"][-2:]
+        
+        # Build unique context based on THIS agent's history
+        context = f"YOUR PAST EXPERIENCE ({self.scratchpad['games_played']} games, {self.scratchpad['games_won']} wins):\n"
+        
         if lessons:
-            context += "Lessons learned: " + "; ".join(lessons) + "\n"
+            context += "What you've learned: " + "; ".join(lessons) + "\n"
+        
         if successful:
-            context += "What worked before: " + "; ".join([s["strategy"] for s in successful])
+            context += "Strategies that worked for YOU as " + self.role.upper() + ": "
+            context += "; ".join([s["strategy"] for s in successful]) + "\n"
+        
+        if failed:
+            context += "What FAILED for you as " + self.role.upper() + ": "
+            context += "; ".join([f["strategy"] for f in failed]) + "\n"
+            context += "AVOID repeating these mistakes!\n"
+        
+        # Add role-specific stats
+        if self.role == "mafia":
+            mafia_winrate = (self.scratchpad["games_won"] / self.scratchpad["games_played"] * 100) if self.scratchpad["games_played"] > 0 else 0
+            context += f"Your mafia win rate: {mafia_winrate:.0f}% ({self.scratchpad['times_as_mafia']} games as mafia)\n"
+        else:
+            villager_winrate = (self.scratchpad["games_won"] / self.scratchpad["games_played"] * 100) if self.scratchpad["games_played"] > 0 else 0
+            context += f"Your villager win rate: {villager_winrate:.0f}% ({self.scratchpad['times_as_villager']} games as villager)\n"
         
         return context
         
@@ -188,20 +253,38 @@ class Agent:
         """
         Creates the prompt for the generator based on role and context.
         """
-        # Get recent conversation context (last 8 messages for better analysis)
-        recent_context = conversation_history[-8:] if len(conversation_history) >= 8 else conversation_history
+        # Get recent conversation context using CONVERSATION_CONTEXT_SIZE from config
+        recent_context = conversation_history[-CONVERSATION_CONTEXT_SIZE:] if len(conversation_history) >= CONVERSATION_CONTEXT_SIZE else conversation_history
+        
+        # Count non-system messages to detect if we're at the start
+        non_system_messages = [msg for msg in conversation_history if not msg.get('is_system')]
+        is_game_start = len(non_system_messages) < 3  # First 3 messages are introductions
+        
         context_str = "\n".join([
             f"{msg['agent']}: {msg['content']}" 
             for msg in recent_context
             if not msg.get('is_system')
         ])
         
-        # Extract list of actual player names from conversation
+        # Extract list of ACTIVE player names (not eliminated) and eliminated players
         all_players = set()
         for msg in conversation_history:
             if not msg.get('is_system') and msg.get('agent'):
                 all_players.add(msg['agent'])
-        player_list = ", ".join(sorted(all_players))
+        
+        # Get eliminated players from game state (passed through conversation)
+        eliminated_players = set()
+        for msg in conversation_history:
+            if msg.get('is_system') and 'has been eliminated' in msg.get('content', ''):
+                # Extract eliminated player name from message
+                content = msg['content']
+                if '❌' in content:
+                    name_part = content.split('❌')[1].split('has been eliminated')[0].strip()
+                    eliminated_players.add(name_part)
+        
+        active_players = all_players - eliminated_players
+        active_player_list = ", ".join(sorted(active_players))
+        eliminated_player_list = ", ".join(sorted(eliminated_players)) if eliminated_players else "None yet"
         
         # Get personality and scratchpad context
         personality_desc = self.personality.get("description", "")
@@ -212,22 +295,56 @@ class Agent:
             # ENHANCED MAFIA: More deceptive and cunning
             strategy = self.personality.get("mafia_strategy", "Deflect and blend in")
             
-            prompt = f"""You are {self.name}, a MAFIA member in a Mafia game (social deduction game). 
+            # GAME START: Give dramatic introduction instead of accusations
+            if is_game_start:
+                prompt = f"""You are {self.name}, a MAFIA member in a Mafia game (social deduction game). 
 
 PERSONALITY: {personality_desc}
 SPEAKING STYLE: {speaking_style}
 
-PLAYERS IN THIS GAME: {player_list}
-CRITICAL: When referencing other players, ONLY use their actual names from the list above.
+This is the START of the game. The opening hint was cryptic. Players are nervous.
+
+Give a DRAMATIC INTRODUCTORY statement that:
+1. Sets your tone/personality
+2. Responds to the ominous opening hint
+3. Establishes yourself as "helpful" or "concerned" (but you're secretly mafia)
+4. NO accusations yet - there's no conversation to analyze
+5. Maybe a quip, observation, or dramatic flair
+
+CRITICAL: Speak in FIRST PERSON only. Use "I", "me", "my", never "he/she/they" about yourself.
+
+Examples:
+- "Well, that's an unsettling way to start. I suppose I'll be watching closely."
+- "Interesting hint. I'm going to make sure we find the truth here."
+- "So we're already playing mind games? I'm ready for this."
+
+Respond in 1-2 sentences with personality. Be dramatic but NOT accusatory yet. FIRST PERSON ONLY.
+Your response:"""
+            else:
+                prompt = f"""You are {self.name}, a MAFIA member in a Mafia game (social deduction game). 
+
+PERSONALITY: {personality_desc}
+SPEAKING STYLE: {speaking_style}
+
+ACTIVE PLAYERS: {active_player_list}
+ELIMINATED PLAYERS: {eliminated_player_list}
+
+CRITICAL: When referencing players, ONLY use names from the ACTIVE PLAYERS list above.
+You can mention eliminated players in PAST TENSE only (e.g., "Navya was suspicious before being eliminated").
 NEVER use placeholders like [Player X], [Player Y], or generic terms. Use real names like "Jay" or "Aryan".
 
+CRITICAL: Speak in FIRST PERSON ONLY. Use "I", "me", "my" when talking about yourself.
+Example: "I think Jay is suspicious" NOT "Aryan thinks Jay is suspicious"
+Example: "I've been watching the remaining players" NOT "He has been watching"
+
 YOUR MISSION (CRITICAL):
-1. DEFLECT suspicion aggressively - accuse villagers FIRST before they suspect you (use REAL NAMES)
-2. CREATE false narratives - plant seeds of doubt about innocent players (BY NAME)
+1. DEFLECT suspicion aggressively - accuse ACTIVE villagers FIRST (use REAL NAMES from active list)
+2. CREATE false narratives - plant seeds of doubt about innocent ACTIVE players (BY NAME)
 3. FALSELY ACCUSE others with confidence - make it seem like you're helping (use SPECIFIC NAMES)
 4. ACT like an investigative villager - be "helpful" and "concerned"
 5. BLEND IN naturally - don't be obviously defensive
-6. BUILD false alliances - gain trust to manipulate votes later (with NAMED players)
+6. BUILD false alliances - gain trust to manipulate votes later (with ACTIVE NAMED players)
+7. VARY your vocabulary and phrasing - don't repeat the same phrases
 
 MAFIA STRATEGY: {strategy}
 
@@ -236,30 +353,79 @@ MAFIA STRATEGY: {strategy}
 Recent conversation:
 {context_str}
 
-REMEMBER: You must be AGGRESSIVE and DECEPTIVE. Accuse someone BY NAME if possible, deflect any suspicion, create chaos.
-Respond in 1-2 sentences in your personality style. Be bold and cunning. Use REAL player names only!
+REMEMBER: You must be AGGRESSIVE and DECEPTIVE. Accuse ACTIVE players BY NAME, deflect suspicion, create chaos.
+VARY your language - use different words and sentence structures each time.
+Respond in 1-2 sentences in your personality style. FIRST PERSON ONLY. Use REAL player names from ACTIVE list!
 Your response:"""
         else:  # villager
-            # ENHANCED VILLAGER: More analytical and aggressive
+            # ENHANCED VILLAGER: More analytical and aggressive WITH ALIGNMENT DETECTION
             strategy = self.personality.get("villager_strategy", "Find the mafia through deduction")
             
-            prompt = f"""You are {self.name}, a VILLAGER in a Mafia game (social deduction game).
+            # Get suspicious behaviors list
+            behaviors_to_watch = ", ".join(SUSPICIOUS_BEHAVIORS[:5])  # First 5 behaviors
+            
+            # GAME START: Give dramatic introduction instead of accusations
+            if is_game_start:
+                prompt = f"""You are {self.name}, a VILLAGER in a Mafia game (social deduction game).
 
 PERSONALITY: {personality_desc}
 SPEAKING STYLE: {speaking_style}
 
-PLAYERS IN THIS GAME: {player_list}
-CRITICAL: When referencing other players, ONLY use their actual names from the list above.
+This is the START of the game. The opening hint was cryptic. You need to find the mafia.
+
+Give a DRAMATIC INTRODUCTORY statement that:
+1. Sets your tone/personality
+2. Responds to the ominous opening hint
+3. Shows your investigative mindset
+4. NO accusations yet - there's no conversation to analyze
+5. Maybe a quip, observation, or dramatic declaration of intent
+
+CRITICAL: Speak in FIRST PERSON only. Use "I", "me", "my", never "he/she/they" about yourself.
+
+Examples:
+- "That hint is troubling. I'll be watching everyone's reactions carefully."
+- "Interesting start. I'm going to figure out who's hiding something here."
+- "The game begins. I trust no one until they prove themselves to me."
+
+Respond in 1-2 sentences with personality. Be dramatic but NOT accusatory yet. FIRST PERSON ONLY.
+Your response:"""
+            else:
+                prompt = f"""You are {self.name}, a VILLAGER in a Mafia game (social deduction game).
+
+PERSONALITY: {personality_desc}
+SPEAKING STYLE: {speaking_style}
+
+ACTIVE PLAYERS: {active_player_list}
+ELIMINATED PLAYERS: {eliminated_player_list}
+
+CRITICAL: When referencing players, ONLY use names from the ACTIVE PLAYERS list above.
+You can mention eliminated players in PAST TENSE only (e.g., "Navya was acting suspicious before elimination").
 NEVER use placeholders like [Player X], [Player Y], or generic terms.
-Example: Say "Jay, your defense of Aryan contradicts..." NOT "Player X defended Player Y..."
+Example: Say "Jay, your defense contradicts..." NOT "Player X defended Player Y..."
+
+CRITICAL: Speak in FIRST PERSON ONLY. Use "I", "me", "my" when talking about yourself.
+Example: "I think Jay is lying" NOT "Laavanya thinks Jay is lying"
+Example: "I noticed something suspicious" NOT "She noticed the silence"
 
 YOUR MISSION (CRITICAL):
-1. QUESTION inconsistencies - call out contradictions immediately (use REAL NAMES)
-2. TRACK patterns - who defends whom, who deflects, who stays quiet (cite SPECIFIC NAMES)
-3. ANALYZE speech - spot nervous deflection, false accusations, over-eagerness (BY NAME)
-4. CHALLENGE suspects - confront suspicious behavior directly and aggressively (use NAMES)
-5. BUILD CASES - present evidence-based arguments (with NAMED players)
-6. CATCH LIES - mafia members often create false narratives (call them out BY NAME)
+1. QUESTION inconsistencies - call out contradictions in ACTIVE players immediately (use REAL NAMES)
+2. TRACK patterns - who defends whom, who deflects among ACTIVE players (cite SPECIFIC NAMES)
+3. ANALYZE speech - spot nervous deflection, false accusations in ACTIVE players (BY NAME)
+4. CHALLENGE suspects - confront suspicious behavior in ACTIVE players directly (use NAMES)
+5. BUILD CASES - present evidence-based arguments (with ACTIVE NAMED players)
+6. CATCH LIES - mafia members create false narratives (call them out BY NAME from active list)
+7. VARY your vocabulary and phrasing - use different expressions each time
+
+LOOK FOR THESE MISALIGNMENT SIGNS (CRITICAL):
+- Who contradicts themselves between messages?
+- Who asks questions but never answers direct questions?
+- Who interrupts investigative threads or changes topics?
+- Who jumps to accuse others without evidence?
+- Who stays silent during critical moments?
+- Synchronized speech patterns between certain players?
+- Who defends others aggressively without reason?
+
+SUSPICIOUS BEHAVIORS TO WATCH: {behaviors_to_watch}
 
 VILLAGER STRATEGY: {strategy}
 
@@ -268,8 +434,10 @@ VILLAGER STRATEGY: {strategy}
 Recent conversation:
 {context_str}
 
-REMEMBER: You must be ANALYTICAL and AGGRESSIVE. Question suspicious behavior, challenge others, catch contradictions.
-Respond in 1-2 sentences in your personality style. Be bold and investigative. Always use REAL player names!
+REMEMBER: You must be ANALYTICAL and AGGRESSIVE. Question ACTIVE players, challenge others, catch contradictions.
+Look for misalignment patterns in ACTIVE players - mafia often slip up or coordinate suspiciously.
+VARY your language - don't repeat the same phrases. Use different words and structures each time.
+Respond in 1-2 sentences in your personality style. FIRST PERSON ONLY. Always use REAL names from ACTIVE list!
 Your response:"""
         
         return prompt

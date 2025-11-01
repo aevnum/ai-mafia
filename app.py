@@ -38,6 +38,26 @@ st.markdown("""
         background-color: rgba(255, 217, 61, 0.1);
         border-left-color: #ffd93d;
     }
+    .hint-msg {
+        background-color: rgba(138, 43, 226, 0.15);
+        border-left-color: #8a2be2;
+        font-weight: bold;
+        font-size: 1.1em;
+        box-shadow: 0 4px 6px rgba(138, 43, 226, 0.3);
+    }
+    .will-msg {
+        background-color: rgba(255, 140, 0, 0.15);
+        border-left-color: #ff8c00;
+        font-weight: bold;
+        font-size: 1.05em;
+        box-shadow: 0 4px 6px rgba(255, 140, 0, 0.3);
+    }
+    .edited-will-msg {
+        background-color: rgba(220, 20, 60, 0.15);
+        border-left-color: #dc143c;
+        font-style: italic;
+        box-shadow: 0 4px 6px rgba(220, 20, 60, 0.3);
+    }
     .agent-card {
         padding: 10px;
         border-radius: 8px;
@@ -222,8 +242,19 @@ else:
         with conversation_container:
             for msg in st.session_state.game.conversation_history:
                 if msg.get('is_system'):
+                    # Special styling for hints and wills
+                    content = msg["content"]
+                    msg_class = "system-msg"
+                    
+                    if "OPENING HINT:" in content:
+                        msg_class = "hint-msg"
+                    elif "LAST WILL:" in content:
+                        msg_class = "will-msg"
+                    elif "WILL EDITED" in content:
+                        msg_class = "edited-will-msg"
+                    
                     st.markdown(
-                        f'<div class="message-box system-msg">🔔 <strong>System:</strong> {msg["content"]}</div>',
+                        f'<div class="message-box {msg_class}">🔔 <strong>System:</strong> {content}</div>',
                         unsafe_allow_html=True
                     )
                 else:

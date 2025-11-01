@@ -7,7 +7,7 @@ import threading
 from typing import List, Dict, Optional
 from agent import Agent
 from api_handler import APIHandler
-from config import DEFAULT_NUM_AGENTS, DEFAULT_NUM_MAFIA, CONVERSATION_CONTEXT_SIZE, VOTING_MESSAGE_THRESHOLD
+from config import DEFAULT_NUM_AGENTS, DEFAULT_NUM_MAFIA, CONVERSATION_CONTEXT_SIZE, VOTING_MESSAGE_THRESHOLD, OPENING_HINTS, VOTING_CONTEXT_SIZE
 
 
 class MafiaGame:
@@ -52,11 +52,95 @@ class MafiaGame:
             agent = Agent(i, name, role)
             self.agents.append(agent)
         
-        # Add initial system message
+        # Have each agent review their scratchpad and formulate strategy
+        for agent in self.agents:
+            agent.formulate_game_strategy()
+        
+        # Generate subtle hint about one of the mafia members
+        mafia_agents = [a for a in self.agents if a.role == "mafia"]
+        opening_hint = self._generate_opening_hint(mafia_agents, self.agents)
+        
         self.add_message("System", 
-                        f"Game started! {self.num_agents} players, {self.num_mafia} mafia among us. "
-                        f"Players: {', '.join([a.name for a in self.agents])}", 
-                        is_system=True)
+            f"🎭 OPENING HINT: {opening_hint}", 
+            is_system=True)
+        
+        self.add_message("System", 
+            f"💭 Someone among the {self.num_agents} players is not who they claim to be...", 
+            is_system=True)
+        
+        self.add_message("System", 
+            f"Players: {', '.join([a.name for a in self.agents])}", 
+            is_system=True)
+    
+    def _generate_opening_hint(self, mafia_agents: List[Agent], all_agents: List[Agent]) -> str:
+        """Generate a subtle but legitimate hint about one of the mafia members"""
+        if not mafia_agents:
+            return "Trust is a luxury none can afford tonight."
+        
+        # Pick one random mafia member to hint at
+        target_mafia = random.choice(mafia_agents)
+        personality = target_mafia.personality
+        traits = personality.get("traits", [])
+        
+        # Create subtle hints based on personality traits
+        hint_templates = {
+            "aggressive": [
+                f"The loudest voice often hides the darkest secrets.",
+                f"Beware those who speak with too much certainty.",
+                f"One among you strikes first, asks questions later."
+            ],
+            "analytical": [
+                f"The one who calculates every word may be calculating against you.",
+                f"Logic can be a weapon as sharp as any blade.",
+                f"Someone here thinks three steps ahead - but toward what end?"
+            ],
+            "charismatic": [
+                f"Charm is often a mask worn by those with something to hide.",
+                f"The most persuasive tongue may speak the sweetest lies.",
+                f"One of you could sell water to the ocean - question their motives."
+            ],
+            "cautious": [
+                f"Silence and caution are twins - one is wisdom, one is guilt.",
+                f"The one who watches most carefully may be hiding most zealously.",
+                f"Someone's restraint is not virtue, but strategy."
+            ],
+            "unpredictable": [
+                f"Chaos and misdirection walk hand in hand tonight.",
+                f"One of you dances to a rhythm only they can hear.",
+                f"Randomness is the perfect disguise for calculated moves."
+            ],
+            "intuitive": [
+                f"One among you trusts their instincts too much - perhaps to deflect from facts.",
+                f"Gut feelings can lead you astray when planted by another.",
+                f"Someone reads the room too well - as if they wrote the script."
+            ],
+            "defensive": [
+                f"The quickest to defend may have the most to defend against.",
+                f"One of you builds walls before accusations are even made.",
+                f"Protection and paranoia wear the same face."
+            ],
+            "skeptical": [
+                f"The one who doubts everyone may be doubting themselves.",
+                f"Perpetual suspicion is the mafia's best camouflage.",
+                f"Someone questions everything except their own motives."
+            ]
+        }
+        
+        # Find matching hints for target mafia's traits
+        possible_hints = []
+        for trait in traits:
+            if trait in hint_templates:
+                possible_hints.extend(hint_templates[trait])
+        
+        # Fallback generic hints if no specific trait matches
+        if not possible_hints:
+            possible_hints = [
+                f"One among you wears two faces tonight.",
+                f"The truth is known to some, hidden by others.",
+                f"Someone's words will betray them before the night is through."
+            ]
+        
+        return random.choice(possible_hints)
     
     def add_message(self, agent_name: str, content: str, is_system: bool = False):
         """Thread-safe method to add message to conversation"""
@@ -171,6 +255,10 @@ class MafiaGame:
     
     def trigger_voting(self):
         """Trigger a voting round"""
+        # Prevent multiple voting triggers
+        if self.in_voting:
+            return
+            
         self.in_voting = True
         self.add_message("System", "🗳️ VOTING TIME! After 20 messages, it's time to vote someone out!", is_system=True)
         
@@ -195,6 +283,24 @@ class MafiaGame:
                 self.add_message("System", 
                     f"❌ {eliminated} has been eliminated! They were {role_reveal}.", 
                     is_system=True)
+                
+                # NEW: If villager dies, generate will and let mafia edit it
+                if eliminated_agent.role == "villager":
+                    original_will = self.generate_death_will(eliminated_agent)
+                    self.add_message("System", 
+                        f"📜 {eliminated}'s LAST WILL: \"{original_will}\"", 
+                        is_system=True)
+                    
+                    # Get remaining mafia to edit the will
+                    remaining_mafia = [a for a in self.agents 
+                                     if a.role == "mafia" and a.name not in self.eliminated_agents]
+                    
+                    if remaining_mafia:
+                        edited_will = self.conduct_will_editing(original_will, remaining_mafia)
+                        if edited_will != original_will:
+                            self.add_message("System", 
+                                f"✏️ WILL EDITED (mafia removed 1 word): \"{edited_will}\"", 
+                                is_system=True)
                 
                 # Check win conditions
                 remaining_agents = [a for a in self.agents if a.name not in self.eliminated_agents]
@@ -236,17 +342,21 @@ class MafiaGame:
             voting_prompt = f"""You are {agent.name}, a {agent.role} in a Mafia game.
 Based on the conversation so far, vote for ONE person to eliminate and explain why.
 
+CRITICAL: Speak in FIRST PERSON ONLY. Use "I", "me", "my" when expressing your thoughts.
+Example: "I vote for Jay because I noticed..." NOT "{agent.name} votes for Jay because he noticed..."
+Example: "I think Navya is suspicious" NOT "This player thinks Navya is suspicious"
+
 Available candidates: {', '.join(candidates)}
 
 YOUR OBSERVATIONS THIS GAME:
 {observations}
 
 Recent conversation:
-{self._format_conversation(conversation[-10:])}
+{self._format_conversation(conversation[-VOTING_CONTEXT_SIZE:])}
 
-Respond in this format:
+Respond in this format (in FIRST PERSON):
 VOTE: [name]
-REASON: [your reasoning in one sentence]"""
+REASON: [your reasoning in one sentence using "I"]"""
 
             try:
                 time.sleep(2)  # Rate limit protection
@@ -296,6 +406,76 @@ REASON: [your reasoning in one sentence]"""
             for msg in messages
             if not msg.get('is_system')
         ])
+    
+    def generate_death_will(self, eliminated_agent: Agent) -> str:
+        """Generate cryptic will from eliminated villager"""
+        conversation = self.get_conversation_snapshot()
+        recent_context = self._format_conversation(conversation[-15:])
+        
+        will_prompt = f"""You are {eliminated_agent.name}, a VILLAGER who was just killed by the MAFIA.
+
+Before you die, you leave a cryptic will with a HINT about who killed you.
+Based on the conversation, who do you suspect? What was the MAFIA doing?
+
+CRITICAL: Write in FIRST PERSON. Use "I saw...", "I noticed...", "I believe..."
+Example: "I saw the pattern in Jay's deflections" NOT "The pattern in Jay's deflections was clear"
+
+Recent conversation:
+{recent_context}
+
+Write a 1-sentence cryptic will that hints at the mafia members WITHOUT naming them directly.
+Use FIRST PERSON perspective in your will.
+
+Example formats:
+- "I noticed the one who asked about X was hiding something about Y"
+- "I watched the pattern in someone's speech - they're synchronizing with another"
+- "I felt the silence before a certain message was deafening"
+- "I counted the questions asked by those who should be answering"
+
+Your will (ONE cryptic sentence in FIRST PERSON):"""
+
+        try:
+            time.sleep(2)  # Rate limit protection
+            will_text = self.api_handler.generate_response(will_prompt)
+            return will_text or "A secret was kept. A secret will die with me."
+        except Exception as e:
+            print(f"Error generating will for {eliminated_agent.name}: {e}")
+            return "A secret was kept. A secret will die with me."
+    
+    def conduct_will_editing(self, original_will: str, mafia_agents: List[Agent]) -> str:
+        """Allow mafia to remove one word from the will to obfuscate it"""
+        editing_prompt = f"""You are a MAFIA member who just killed someone.
+
+The victim left this cryptic will: "{original_will}"
+
+You get to remove ONE word to make the hint less clear. 
+Which word should you remove to best protect yourself or your allies?
+The removed word should be one that reveals strategy or points fingers.
+
+Respond with ONLY the word you want removed, nothing else."""
+
+        removed_word = None
+        for agent in mafia_agents:
+            if agent.name not in self.eliminated_agents:
+                try:
+                    time.sleep(2)  # Rate limit protection
+                    response = self.api_handler.generate_response(editing_prompt)
+                    if response:
+                        removed_word = response.strip().strip('"').strip("'").lower()
+                        break
+                except Exception as e:
+                    print(f"Error in will editing by {agent.name}: {e}")
+        
+        if removed_word:
+            # Remove first occurrence of the word
+            words = original_will.lower().split()
+            if removed_word in words:
+                idx = words.index(removed_word)
+                new_will = " ".join(original_will.split()[:idx] + original_will.split()[idx+1:])
+                return new_will
+        
+        return original_will
+    
     
     def start(self):
         """Start the game"""
