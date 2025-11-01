@@ -229,13 +229,20 @@ else:
                     )
         
         # Auto-run rounds at the end so conversation shows first
-        if st.session_state.game_running:
+        if st.session_state.game_running and st.session_state.game.is_running:
             with st.spinner("Agents thinking..."):
                 try:
                     # Run a round
                     round_messages = st.session_state.game.run_round()
                     if round_messages:
                         st.session_state.round_count += 1
+                    
+                    # Check if game was stopped during the round (win condition)
+                    if not st.session_state.game.is_running:
+                        st.session_state.game_running = False
+                        st.success("🎮 Game ended! Check the conversation for results.")
+                        st.rerun()
+                        
                 except Exception as e:
                     st.warning(f"⚠️ Rate limit or API error. Game will retry automatically.")
                     print(f"Error in game round: {e}")

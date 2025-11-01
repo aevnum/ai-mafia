@@ -28,6 +28,8 @@ class MafiaGame:
         self.lock = threading.Lock()  # Protect shared conversation context
         self.in_voting = False
         self.eliminated_agents = []
+        self.last_voting_message_count = 0  # Track when last voting occurred
+        self.agents_spoken_this_round = set()  # Track who has spoken in current round
         
         self._initialize_agents()
     
@@ -115,30 +117,55 @@ class MafiaGame:
     def run_round(self) -> List[Dict]:
         """
         Run one round where each agent gets a chance to speak.
+        Ensures each agent speaks once before any agent speaks twice (round-robin).
         Returns list of messages from this round.
         """
         round_messages = []
         
+        # Don't run if game is stopped
+        if not self.is_running:
+            return round_messages
+        
         # Check if we need to trigger voting
         non_system_messages = [m for m in self.conversation_history if not m.get('is_system')]
-        if len(non_system_messages) >= VOTING_MESSAGE_THRESHOLD and not self.in_voting:
+        messages_since_last_vote = len(non_system_messages) - self.last_voting_message_count
+        
+        if messages_since_last_vote >= VOTING_MESSAGE_THRESHOLD and not self.in_voting:
             self.trigger_voting()
             return round_messages
         
-        # Shuffle agent order for natural chaos
-        agent_order = [a for a in self.agents if a.name not in self.eliminated_agents]
-        random.shuffle(agent_order)
+        # Get active agents (not eliminated)
+        active_agents = [a for a in self.agents if a.name not in self.eliminated_agents]
         
-        for agent in agent_order:
+        # Reset round tracker if all active agents have spoken
+        if self.agents_spoken_this_round and len(self.agents_spoken_this_round) >= len(active_agents):
+            self.agents_spoken_this_round.clear()
+        
+        # Get agents who haven't spoken this round
+        agents_to_speak = [a for a in active_agents if a.name not in self.agents_spoken_this_round]
+        
+        # If all have spoken, reset and use all active agents
+        if not agents_to_speak:
+            self.agents_spoken_this_round.clear()
+            agents_to_speak = active_agents
+        
+        # Shuffle for variety while maintaining fairness
+        random.shuffle(agents_to_speak)
+        
+        # Each agent gets ONE chance to speak this round
+        for agent in agents_to_speak:
             if not self.is_running:
                 break
             
             # Add delay between API calls to avoid rate limits (especially for free tier)
             time.sleep(2)  # 2 second delay between agent turns
             
+            # Process agent turn (they decide whether to speak via scheduler)
             message = self.process_agent_turn(agent)
             if message:
                 round_messages.append(message)
+                # Mark this agent as having spoken this round
+                self.agents_spoken_this_round.add(agent.name)
         
         return round_messages
     
@@ -146,6 +173,9 @@ class MafiaGame:
         """Trigger a voting round"""
         self.in_voting = True
         self.add_message("System", "🗳️ VOTING TIME! After 20 messages, it's time to vote someone out!", is_system=True)
+        
+        # Reset round tracker for fresh start after voting
+        self.agents_spoken_this_round.clear()
         
         # Conduct voting
         votes = self.conduct_voting()
@@ -177,6 +207,16 @@ class MafiaGame:
                 elif mafia_count >= villager_count:
                     self.add_message("System", "💀 MAFIA WINS! They equal or outnumber the villagers!", is_system=True)
                     self.stop()
+                else:
+                    # Continue game - announce new discussion round
+                    remaining_agents = [a for a in self.agents if a.name not in self.eliminated_agents]
+                    self.add_message("System", 
+                        f"💬 New discussion round begins! Remaining players: {', '.join([a.name for a in remaining_agents])}", 
+                        is_system=True)
+                    
+                    # Update the voting counter so next vote happens after 20 more messages
+                    non_system_messages = [m for m in self.conversation_history if not m.get('is_system')]
+                    self.last_voting_message_count = len(non_system_messages)
         
         self.in_voting = False
     
@@ -191,28 +231,53 @@ class MafiaGame:
             conversation = self.get_conversation_snapshot()
             
             voting_prompt = f"""You are {agent.name}, a {agent.role} in a Mafia game.
-Based on the conversation so far, vote for ONE person to eliminate.
+Based on the conversation so far, vote for ONE person to eliminate and explain why.
+
 Available candidates: {', '.join(candidates)}
 
 Recent conversation:
 {self._format_conversation(conversation[-10:])}
 
-Respond with ONLY the name of the person you want to vote for, nothing else."""
+Respond in this format:
+VOTE: [name]
+REASON: [your reasoning in one sentence]"""
 
             try:
                 time.sleep(2)  # Rate limit protection
-                vote = self.api_handler.generate_response(voting_prompt)
+                response = self.api_handler.generate_response(voting_prompt)
                 
-                if vote:
-                    # Clean up the vote response
-                    vote = vote.strip().strip('"').strip("'").strip('.')
+                if response:
+                    # Parse vote and reason
+                    vote_name = None
+                    reason = "No reason given"
+                    
+                    # Extract vote
+                    if "VOTE:" in response:
+                        vote_line = response.split("VOTE:")[1].split("\n")[0].strip()
+                        vote_name = vote_line.strip().strip('"').strip("'").strip('.')
+                    
+                    # Extract reason
+                    if "REASON:" in response:
+                        reason = response.split("REASON:")[1].strip().split("\n")[0].strip()
                     
                     # Find matching candidate
-                    for candidate in candidates:
-                        if candidate.lower() in vote.lower():
-                            votes[candidate] = votes.get(candidate, 0) + 1
-                            self.add_message("System", f"🗳️ {agent.name} voted for {candidate}", is_system=True)
-                            break
+                    if vote_name:
+                        for candidate in candidates:
+                            if candidate.lower() in vote_name.lower():
+                                votes[candidate] = votes.get(candidate, 0) + 1
+                                self.add_message("System", 
+                                    f"🗳️ {agent.name} voted for {candidate}. Reason: {reason}", 
+                                    is_system=True)
+                                break
+                    else:
+                        # Fallback: try to find any candidate name in response
+                        for candidate in candidates:
+                            if candidate.lower() in response.lower():
+                                votes[candidate] = votes.get(candidate, 0) + 1
+                                self.add_message("System", 
+                                    f"🗳️ {agent.name} voted for {candidate}. Reason: {reason}", 
+                                    is_system=True)
+                                break
             except Exception as e:
                 print(f"Error in voting for {agent.name}: {e}")
         
