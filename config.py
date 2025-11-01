@@ -16,14 +16,14 @@ GEMINI_CONFIG = {
     "api_key": os.getenv("GOOGLE_API_KEY", ""),  # Fetch from environment variable
     "model": "gemini-2.5-flash-lite",
     "temperature": 0.75,
-    "max_tokens": 300
+    "max_tokens": 512
 }
 
 GROK_CONFIG = {
     "api_key": os.getenv("GROK_API_KEY", ""),  # Fetch from environment variable
     "model": "grok-beta",
     "temperature": 0.75,
-    "max_tokens": 300
+    "max_tokens": 512
 }
 
 # Game Settings
