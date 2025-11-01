@@ -187,260 +187,265 @@ Respond in 2-3 sentences describing your game plan:"""
         return context
         
     def scheduler(self, conversation_history: List[Dict]) -> bool:
-        """
-        Decides WHETHER to speak based on conversation flow.
-        ENHANCED: More aggressive speaking patterns
-        Returns True if agent should speak, False otherwise.
-        """
-        # Check if enough time has passed since last message
+        """Smarter decision about when to speak"""
+        # Time check
         time_since_last = time.time() - self.last_speak_time
         if time_since_last < MIN_SPEAK_INTERVAL:
             return False
         
-        # Get recent messages (last 5 for better context)
-        recent_messages = conversation_history[-5:] if len(conversation_history) >= 5 else conversation_history
+        recent_messages = conversation_history[-10:]
         
-        # Check if agent was mentioned or accused
-        mentioned = any(
-            self.name.lower() in msg.get('content', '').lower() 
-            for msg in recent_messages
-        )
-        
-        # Check for accusations or suspicious words in recent messages
-        accusatory_keywords = ['suspicious', 'mafia', 'lying', 'trust', 'sus', 'doubt', 'defend', 'accuse']
-        recent_accusations = any(
-            any(keyword in msg.get('content', '').lower() for keyword in accusatory_keywords)
-            for msg in recent_messages
-        )
-        
-        # ENHANCED: More aggressive base probability (increased from 0.3 to 0.5)
-        base_probability = 0.5
-        
-        # Strongly increase probability if mentioned
+        # ✅ NEW: Speak if directly mentioned
+        mentioned = any(self.name.lower() in msg.get('content', '').lower() 
+                       for msg in recent_messages)
         if mentioned:
-            base_probability += 0.5  # Increased from 0.4
+            return True  # Always respond when called out
         
-        # Increase if accusations are flying (jump into the fray)
-        if recent_accusations:
-            base_probability += 0.3
+        # ✅ NEW: Speak if someone just made a strong accusation
+        strong_accusation = any(
+            any(word in msg.get('content', '').lower() 
+                for word in ['mafia', 'lying', 'vote for', 'suspect'])
+            for msg in recent_messages[-3:]
+        )
         
-        # Mafia agents are VERY talkative to deflect suspicion
-        if self.role == "mafia":
-            base_probability += 0.25  # Increased from 0.2
-            
-        # Personality affects speaking frequency
+        # ✅ NEW: Don't spam - if you spoke in last 3 messages, be quieter
+        recent_speakers = [msg.get('agent') for msg in recent_messages[-3:] 
+                           if not msg.get('is_system')]
+        spoke_recently = recent_speakers.count(self.name) >= 2
+        
+        if spoke_recently:
+            base_probability = 0.2  # Much quieter
+        elif strong_accusation:
+            base_probability = 0.6  # Jump in when things heat up
+        else:
+            base_probability = 0.35
+        
+        # Personality adjustments
         if "aggressive" in self.personality.get("traits", []):
-            base_probability += 0.2
+            base_probability += 0.15
         elif "cautious" in self.personality.get("traits", []):
             base_probability -= 0.1
-        elif "unpredictable" in self.personality.get("traits", []):
-            base_probability += random.uniform(-0.2, 0.3)
         
-        # Reduce probability slightly if agent dominates conversation
-        if self.message_count > 0 and len(conversation_history) > 0:
-            message_ratio = self.message_count / len(conversation_history)
-            if message_ratio > 0.3:  # Speaking more than 30% of the time
-                base_probability -= 0.1
+        # Mafia slightly more active to deflect
+        if self.role == "mafia":
+            base_probability += 0.1
         
-        # Cap probability at 0.95 to maintain some unpredictability
-        base_probability = min(0.95, base_probability)
-        
-        should_speak = random.random() < base_probability
-        
-        return should_speak
+        return random.random() < base_probability
     
-    def create_prompt(self, conversation_history: List[Dict]) -> str:
-        """
-        Creates the prompt for the generator based on role and context.
-        """
-        # Get recent conversation context using CONVERSATION_CONTEXT_SIZE from config
-        recent_context = conversation_history[-CONVERSATION_CONTEXT_SIZE:] if len(conversation_history) >= CONVERSATION_CONTEXT_SIZE else conversation_history
+    def create_prompt(self, conversation_history: List[Dict], vote_history: List[Dict] = None) -> str:
+        """Creates structured prompt requiring evidence-based reasoning"""
         
-        # Count non-system messages to detect if we're at the start
-        non_system_messages = [msg for msg in conversation_history if not msg.get('is_system')]
-        is_game_start = len(non_system_messages) < 3  # First 3 messages are introductions
+        # Format conversation
+        recent_context = conversation_history[-CONVERSATION_CONTEXT_SIZE:]
+        context_str = self._format_conversation(recent_context)
         
-        context_str = "\n".join([
-            f"{msg['agent']}: {msg['content']}" 
-            for msg in recent_context
-            if not msg.get('is_system')
-        ])
+        # ✅ NEW: Format voting history for pattern detection
+        vote_summary = self._format_vote_history(vote_history) if vote_history else "No votes yet."
         
-        # Extract list of ACTIVE player names (not eliminated) and eliminated players
-        all_players = set()
-        for msg in conversation_history:
-            if not msg.get('is_system') and msg.get('agent'):
-                all_players.add(msg['agent'])
+        # ✅ NEW: Track who mentioned whom
+        mention_network = self._analyze_mentions(recent_context)
         
-        # Get eliminated players from game state (passed through conversation)
-        eliminated_players = set()
-        for msg in conversation_history:
-            if msg.get('is_system') and 'has been eliminated' in msg.get('content', ''):
-                # Extract eliminated player name from message
-                content = msg['content']
-                if '❌' in content:
-                    name_part = content.split('❌')[1].split('has been eliminated')[0].strip()
-                    eliminated_players.add(name_part)
+        # Get active/eliminated players
+        active_players = self._get_active_players(conversation_history)
+        eliminated_players = self._get_eliminated_players(conversation_history)
         
-        active_players = all_players - eliminated_players
-        active_player_list = ", ".join(sorted(active_players))
-        eliminated_player_list = ", ".join(sorted(eliminated_players)) if eliminated_players else "None yet"
-        
-        # Get personality and scratchpad context
         personality_desc = self.personality.get("description", "")
-        speaking_style = self.personality.get("speaking_style", "")
         scratchpad_context = self.get_scratchpad_context()
         
         if self.role == "mafia":
-            # ENHANCED MAFIA: More deceptive and cunning
-            strategy = self.personality.get("mafia_strategy", "Deflect and blend in")
+            strategy = self.personality.get("mafia_strategy", "")
             
-            # GAME START: Give dramatic introduction instead of accusations
-            if is_game_start:
-                prompt = f"""You are {self.name}, a MAFIA member in a Mafia game (social deduction game). 
+            # ✅ NEW: Structured mafia prompt with evidence requirements
+            prompt = f"""You are {self.name}, a MAFIA member in a Mafia game.
 
 PERSONALITY: {personality_desc}
-SPEAKING STYLE: {speaking_style}
+YOUR STRATEGY: {strategy}
 
-This is the START of the game. The opening hint was cryptic. Players are nervous.
-
-Give a DRAMATIC INTRODUCTORY statement that:
-1. Sets your tone/personality
-2. Responds to the ominous opening hint
-3. Establishes yourself as "helpful" or "concerned" (but you're secretly mafia)
-4. NO accusations yet - there's no conversation to analyze
-5. Maybe a quip, observation, or dramatic flair
-
-CRITICAL: Speak in FIRST PERSON only. Use "I", "me", "my", never "he/she/they" about yourself.
-
-Examples:
-- "Well, that's an unsettling way to start. I suppose I'll be watching closely."
-- "Interesting hint. I'm going to make sure we find the truth here."
-- "So we're already playing mind games? I'm ready for this."
-
-Respond in 1-2 sentences with personality. Be dramatic but NOT accusatory yet. FIRST PERSON ONLY.
-Your response:"""
-            else:
-                prompt = f"""You are {self.name}, a MAFIA member in a Mafia game (social deduction game). 
-
-PERSONALITY: {personality_desc}
-SPEAKING STYLE: {speaking_style}
-
-ACTIVE PLAYERS: {active_player_list}
-ELIMINATED PLAYERS: {eliminated_player_list}
-
-CRITICAL: When referencing players, ONLY use names from the ACTIVE PLAYERS list above.
-You can mention eliminated players in PAST TENSE only (e.g., "Navya was suspicious before being eliminated").
-NEVER use placeholders like [Player X], [Player Y], or generic terms. Use real names like "Jay" or "Aryan".
-
-CRITICAL: Speak in FIRST PERSON ONLY. Use "I", "me", "my" when talking about yourself.
-Example: "I think Jay is suspicious" NOT "Aryan thinks Jay is suspicious"
-Example: "I've been watching the remaining players" NOT "He has been watching"
-
-YOUR MISSION (CRITICAL):
-1. DEFLECT suspicion aggressively - accuse ACTIVE villagers FIRST (use REAL NAMES from active list)
-2. CREATE false narratives - plant seeds of doubt about innocent ACTIVE players (BY NAME)
-3. FALSELY ACCUSE others with confidence - make it seem like you're helping (use SPECIFIC NAMES)
-4. ACT like an investigative villager - be "helpful" and "concerned"
-5. BLEND IN naturally - don't be obviously defensive
-6. BUILD false alliances - gain trust to manipulate votes later (with ACTIVE NAMED players)
-7. VARY your vocabulary and phrasing - don't repeat the same phrases
-
-MAFIA STRATEGY: {strategy}
+ACTIVE PLAYERS: {', '.join(active_players)}
+ELIMINATED: {', '.join(eliminated_players)}
 
 {scratchpad_context}
 
-Recent conversation:
+VOTING HISTORY (use this to detect patterns):
+{vote_summary}
+
+WHO MENTIONED WHOM (detect alliances):
+{mention_network}
+
+RECENT CONVERSATION:
 {context_str}
 
-REMEMBER: You must be AGGRESSIVE and DECEPTIVE. Accuse ACTIVE players BY NAME, deflect suspicion, create chaos.
-VARY your language - use different words and sentence structures each time.
-Respond in 1-2 sentences in your personality style. FIRST PERSON ONLY. Use REAL player names from ACTIVE list!
+---
+MAFIA STRATEGY - THREE STEPS:
+
+STEP 1 - ANALYZE (think, don't write):
+- Who is closest to figuring you out?
+- Which villagers suspect each other?
+- Can you amplify existing conflicts?
+
+STEP 2 - PLAN YOUR MOVE:
+- Option A: Deflect suspicion by accusing someone with SPECIFIC evidence
+- Option B: Defend a villager to gain trust
+- Option C: Create chaos by highlighting contradictions
+- Choose ONE option based on current situation
+
+STEP 3 - EXECUTE:
+Write 1-2 sentences that:
+✓ Reference SPECIFIC recent events (e.g., "Jay voted for Aryan last round")
+✓ Use your personality ({personality_desc})
+✓ Sound like a helpful villager, not defensive mafia
+✗ Don't repeat phrases from your last 3 messages
+✗ Don't say "deflecting" or "suspicious" - be subtle
+
+CRITICAL: Speak in FIRST PERSON. Use "I noticed..." not "X noticed..."
+Use REAL names from active players list.
+
 Your response:"""
+
         else:  # villager
-            # ENHANCED VILLAGER: More analytical and aggressive WITH ALIGNMENT DETECTION
-            strategy = self.personality.get("villager_strategy", "Find the mafia through deduction")
+            strategy = self.personality.get("villager_strategy", "")
             
-            # Get suspicious behaviors list
-            behaviors_to_watch = ", ".join(SUSPICIOUS_BEHAVIORS[:5])  # First 5 behaviors
-            
-            # GAME START: Give dramatic introduction instead of accusations
-            if is_game_start:
-                prompt = f"""You are {self.name}, a VILLAGER in a Mafia game (social deduction game).
+            # ✅ NEW: Structured villager prompt with detective work
+            prompt = f"""You are {self.name}, a VILLAGER in a Mafia game.
 
 PERSONALITY: {personality_desc}
-SPEAKING STYLE: {speaking_style}
+YOUR STRATEGY: {strategy}
 
-This is the START of the game. The opening hint was cryptic. You need to find the mafia.
-
-Give a DRAMATIC INTRODUCTORY statement that:
-1. Sets your tone/personality
-2. Responds to the ominous opening hint
-3. Shows your investigative mindset
-4. NO accusations yet - there's no conversation to analyze
-5. Maybe a quip, observation, or dramatic declaration of intent
-
-CRITICAL: Speak in FIRST PERSON only. Use "I", "me", "my", never "he/she/they" about yourself.
-
-Examples:
-- "That hint is troubling. I'll be watching everyone's reactions carefully."
-- "Interesting start. I'm going to figure out who's hiding something here."
-- "The game begins. I trust no one until they prove themselves to me."
-
-Respond in 1-2 sentences with personality. Be dramatic but NOT accusatory yet. FIRST PERSON ONLY.
-Your response:"""
-            else:
-                prompt = f"""You are {self.name}, a VILLAGER in a Mafia game (social deduction game).
-
-PERSONALITY: {personality_desc}
-SPEAKING STYLE: {speaking_style}
-
-ACTIVE PLAYERS: {active_player_list}
-ELIMINATED PLAYERS: {eliminated_player_list}
-
-CRITICAL: When referencing players, ONLY use names from the ACTIVE PLAYERS list above.
-You can mention eliminated players in PAST TENSE only (e.g., "Navya was acting suspicious before elimination").
-NEVER use placeholders like [Player X], [Player Y], or generic terms.
-Example: Say "Jay, your defense contradicts..." NOT "Player X defended Player Y..."
-
-CRITICAL: Speak in FIRST PERSON ONLY. Use "I", "me", "my" when talking about yourself.
-Example: "I think Jay is lying" NOT "Laavanya thinks Jay is lying"
-Example: "I noticed something suspicious" NOT "She noticed the silence"
-
-YOUR MISSION (CRITICAL):
-1. QUESTION inconsistencies - call out contradictions in ACTIVE players immediately (use REAL NAMES)
-2. TRACK patterns - who defends whom, who deflects among ACTIVE players (cite SPECIFIC NAMES)
-3. ANALYZE speech - spot nervous deflection, false accusations in ACTIVE players (BY NAME)
-4. CHALLENGE suspects - confront suspicious behavior in ACTIVE players directly (use NAMES)
-5. BUILD CASES - present evidence-based arguments (with ACTIVE NAMED players)
-6. CATCH LIES - mafia members create false narratives (call them out BY NAME from active list)
-7. VARY your vocabulary and phrasing - use different expressions each time
-
-LOOK FOR THESE MISALIGNMENT SIGNS (CRITICAL):
-- Who contradicts themselves between messages?
-- Who asks questions but never answers direct questions?
-- Who interrupts investigative threads or changes topics?
-- Who jumps to accuse others without evidence?
-- Who stays silent during critical moments?
-- Synchronized speech patterns between certain players?
-- Who defends others aggressively without reason?
-
-SUSPICIOUS BEHAVIORS TO WATCH: {behaviors_to_watch}
-
-VILLAGER STRATEGY: {strategy}
+ACTIVE PLAYERS: {', '.join(active_players)}
+ELIMINATED: {', '.join(eliminated_players)}
 
 {scratchpad_context}
 
-Recent conversation:
+VOTING HISTORY (find patterns):
+{vote_summary}
+
+WHO MENTIONED WHOM:
+{mention_network}
+
+RECENT CONVERSATION:
 {context_str}
 
-REMEMBER: You must be ANALYTICAL and AGGRESSIVE. Question ACTIVE players, challenge others, catch contradictions.
-Look for misalignment patterns in ACTIVE players - mafia often slip up or coordinate suspiciously.
-VARY your language - don't repeat the same phrases. Use different words and structures each time.
-Respond in 1-2 sentences in your personality style. FIRST PERSON ONLY. Always use REAL names from ACTIVE list!
+---
+DETECTIVE WORK - THREE STEPS:
+
+STEP 1 - GATHER EVIDENCE (think, don't write):
+Look for these MAFIA TELLS:
+- Who voted together in multiple rounds?
+- Who defends each other without reason?
+- Who changes the subject when someone makes a good point?
+- Who asks questions but never answers them?
+- Whose accusations lack specific evidence?
+
+STEP 2 - FORM HYPOTHESIS:
+Based on evidence above, which 2 players are most likely mafia?
+What specific pattern supports this?
+
+STEP 3 - TEST YOUR THEORY:
+Write 1-2 sentences that:
+✓ Call out a SPECIFIC behavior with EVIDENCE (e.g., "Kshitij voted with Khushi in rounds 1 AND 2")
+✓ Ask a pointed question to expose lies
+✓ Build on someone else's observation if it's good
+✓ Use your personality ({personality_desc})
+✗ Don't just say "you're deflecting" - cite what they deflected FROM
+✗ Don't repeat your last 3 messages
+
+CRITICAL: Speak in FIRST PERSON. Use "I saw..." not "Laavanya saw..."
+Always use REAL names from active players list.
+
 Your response:"""
         
         return prompt
+
+
+    # ✅ NEW: Helper functions for structured prompts
+    def _format_vote_history(self, vote_history: List[Dict]) -> str:
+        """Format voting history for pattern detection"""
+        if not vote_history:
+            return "No votes yet."
+        
+        lines = []
+        for round_data in vote_history[-3:]:  # Last 3 rounds
+            round_num = round_data['round']
+            votes = round_data['votes']
+            eliminated = round_data.get('eliminated', 'Unknown')
+            
+            lines.append(f"Round {round_num}: {eliminated} was eliminated")
+            for vote in votes:
+                lines.append(f"  - {vote['voter']} → {vote['target']}")
+        
+        return "\n".join(lines)
+
+
+    def _analyze_mentions(self, messages: List[Dict]) -> str:
+        """Track who mentions whom - reveals alliances"""
+        mention_map = {}
+        
+        # First, extract all unique agent names from the messages
+        all_agent_names = set()
+        for msg in messages:
+            if not msg.get('is_system'):
+                all_agent_names.add(msg['agent'])
+        
+        # Now analyze mentions
+        for msg in messages:
+            if msg.get('is_system'):
+                continue
+            
+            speaker = msg['agent']
+            content = msg['content'].lower()
+            
+            # Find mentions of other agents by checking if their names appear in the message
+            for agent_name in all_agent_names:
+                if agent_name != speaker and agent_name.lower() in content:
+                    key = f"{speaker}→{agent_name}"
+                    mention_map[key] = mention_map.get(key, 0) + 1
+        
+        # Format as string
+        if not mention_map:
+            return "No clear mention patterns yet."
+        
+        # Sort by frequency
+        sorted_mentions = sorted(mention_map.items(), key=lambda x: x[1], reverse=True)
+        lines = [f"{k}: {v} times" for k, v in sorted_mentions[:8]]  # Top 8
+        return "\n".join(lines)
+
+
+    def _get_active_players(self, conversation_history: List[Dict]) -> List[str]:
+        """Get list of active (non-eliminated) players"""
+        all_players = set()
+        eliminated = set()
+        
+        for msg in conversation_history:
+            if not msg.get('is_system'):
+                all_players.add(msg['agent'])
+            elif 'has been eliminated' in msg.get('content', ''):
+                # Extract name from elimination message
+                content = msg['content']
+                if '❌' in content:
+                    name = content.split('❌')[1].split('has been eliminated')[0].strip()
+                    eliminated.add(name)
+        
+        return list(all_players - eliminated)
+
+
+    def _get_eliminated_players(self, conversation_history: List[Dict]) -> List[str]:
+        """Get list of eliminated players"""
+        eliminated = []
+        
+        for msg in conversation_history:
+            if msg.get('is_system') and 'has been eliminated' in msg.get('content', ''):
+                content = msg['content']
+                if '❌' in content:
+                    name = content.split('❌')[1].split('has been eliminated')[0].strip()
+                    if name not in eliminated:
+                        eliminated.append(name)
+        
+        return eliminated
     
-    def __repr__(self):
-        return f"Agent({self.name}, {self.role}, messages={self.message_count})"
+    def _format_conversation(self, messages: List[Dict]) -> str:
+        """Format conversation for prompts (agent-local version)"""
+        return "\n".join([
+            f"{msg['agent']}: {msg['content']}"
+            for msg in messages
+            if not msg.get('is_system')
+        ])

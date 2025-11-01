@@ -23,6 +23,7 @@ class MafiaGame:
         self.num_mafia = num_mafia
         self.agents: List[Agent] = []
         self.conversation_history: List[Dict] = []
+        self.vote_history: List[Dict] = []  # ✅ NEW: Track voting patterns
         self.api_handler = APIHandler(api_provider)
         self.is_running = False
         self.lock = threading.Lock()  # Protect shared conversation context
@@ -176,8 +177,8 @@ class MafiaGame:
         agent.is_typing = True
         
         try:
-            # GENERATOR: Create what to say
-            prompt = agent.create_prompt(conversation)
+            # GENERATOR: Create what to say, now pass vote_history for pattern detection
+            prompt = agent.create_prompt(conversation, self.vote_history)
             response = self.api_handler.generate_response(prompt)
             
             if response:
@@ -327,8 +328,9 @@ class MafiaGame:
         self.in_voting = False
     
     def conduct_voting(self) -> Dict[str, int]:
-        """Have each agent vote for someone to eliminate, using scratchpad observations"""
+        """Have each agent vote for someone to eliminate, using scratchpad observations and track all votes"""
         votes = {}
+        round_votes = []  # ✅ NEW: Track this round's votes
         active_agents = [a for a in self.agents if a.name not in self.eliminated_agents]
         
         for agent in active_agents:
@@ -358,6 +360,8 @@ Respond in this format (in FIRST PERSON):
 VOTE: [name]
 REASON: [your reasoning in one sentence using "I"]"""
 
+            vote_name = None
+            reason = "No reason given"
             try:
                 time.sleep(2)  # Rate limit protection
                 response = self.api_handler.generate_response(voting_prompt)
@@ -366,16 +370,13 @@ REASON: [your reasoning in one sentence using "I"]"""
                     # Parse vote and reason
                     vote_name = None
                     reason = "No reason given"
-                    
                     # Extract vote
                     if "VOTE:" in response:
                         vote_line = response.split("VOTE:")[1].split("\n")[0].strip()
                         vote_name = vote_line.strip().strip('"').strip("'").strip('.')
-                    
                     # Extract reason
                     if "REASON:" in response:
                         reason = response.split("REASON:")[1].strip().split("\n")[0].strip()
-                    
                     # Find matching candidate
                     if vote_name:
                         for candidate in candidates:
@@ -384,6 +385,7 @@ REASON: [your reasoning in one sentence using "I"]"""
                                 self.add_message("System", 
                                     f"🗳️ {agent.name} voted for {candidate}. Reason: {reason}", 
                                     is_system=True)
+                                vote_name = candidate  # Normalize to candidate name
                                 break
                     else:
                         # Fallback: try to find any candidate name in response
@@ -393,10 +395,24 @@ REASON: [your reasoning in one sentence using "I"]"""
                                 self.add_message("System", 
                                     f"🗳️ {agent.name} voted for {candidate}. Reason: {reason}", 
                                     is_system=True)
+                                vote_name = candidate
                                 break
             except Exception as e:
                 print(f"Error in voting for {agent.name}: {e}")
-        
+            # ✅ NEW: After each vote, store it
+            round_votes.append({
+                "voter": agent.name,
+                "target": vote_name,
+                "reason": reason,
+                "round": len(self.vote_history) + 1
+            })
+        # ✅ NEW: Save this round (eliminated will be filled in trigger_voting)
+        # We'll update eliminated after voting in trigger_voting
+        self.vote_history.append({
+            "round": len(self.vote_history) + 1,
+            "votes": round_votes,
+            "eliminated": None  # Will be updated after elimination
+        })
         return votes
     
     def _format_conversation(self, messages: List[Dict]) -> str:

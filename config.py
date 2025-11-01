@@ -15,23 +15,23 @@ API_PROVIDER = "gemini"  # Options: "gemini" or "grok"
 GEMINI_CONFIG = {
     "api_key": os.getenv("GOOGLE_API_KEY", ""),  # Fetch from environment variable
     "model": "gemini-2.5-flash-lite",
-    "temperature": 1.1,  # Increased from 0.9 for more varied responses
-    "max_tokens": 150
+    "temperature": 0.75,
+    "max_tokens": 300
 }
 
 GROK_CONFIG = {
     "api_key": os.getenv("GROK_API_KEY", ""),  # Fetch from environment variable
     "model": "grok-beta",
-    "temperature": 1.1,  # Increased from 0.9 for more varied responses
-    "max_tokens": 150
+    "temperature": 0.75,
+    "max_tokens": 300
 }
 
 # Game Settings
-DEFAULT_NUM_AGENTS = 5
+DEFAULT_NUM_AGENTS = 8
 DEFAULT_NUM_MAFIA = 2
 MIN_SPEAK_INTERVAL = 3  # Minimum seconds between agent messages
-CONVERSATION_CONTEXT_SIZE = 20  # Number of recent messages agents see when speaking
-VOTING_CONTEXT_SIZE = 25  # Number of recent messages agents see during voting
+CONVERSATION_CONTEXT_SIZE = 40  # Number of recent messages agents see when speaking
+VOTING_CONTEXT_SIZE = 50  # Number of recent messages agents see during voting
 VOTING_MESSAGE_THRESHOLD = 20  # Trigger voting after this many messages
 MAX_AGENTS = 8  # Maximum number of agents in a game
 
