@@ -233,6 +233,14 @@ DO NOT just summarize their argument - add YOUR perspective!
         non_system_messages = [m for m in conversation_history if not m.get('is_system')]
         is_game_start = len(non_system_messages) < 3
 
+        # Extract opening hint for game start
+        opening_hint = ""
+        if is_game_start:
+            for msg in conversation_history:
+                if msg.get('is_system') and '🎭 OPENING HINT:' in msg.get('content', ''):
+                    opening_hint = msg['content'].replace('🎭 OPENING HINT:', '').strip()
+                    break
+
         # Inject round summary if available
         summary_injection = ""
         if round_summary:
@@ -251,11 +259,13 @@ SPEAKING STYLE: {self.personality.get('speaking_style', '')}
 🎭 PERSONALITY RULES YOU MUST FOLLOW:
 {personality_rules}
 
-This is the START of the game. The opening hint was cryptic. Players are nervous.
+This is the START of the game. Players are nervous.
+
+🎭 OPENING HINT: "{opening_hint}"
 
 Give a DRAMATIC INTRODUCTORY statement (1-2 sentences) that:
 - Sets your personality tone
-- Responds to the ominous hint
+- Responds to this specific hint
 - Establishes yourself as "helpful" (but you're secretly mafia)
 - NO accusations yet - there's no conversation to analyze
 
@@ -307,12 +317,14 @@ SPEAKING STYLE: {self.personality.get('speaking_style', '')}
 🎭 PERSONALITY RULES YOU MUST FOLLOW:
 {personality_rules}
 
-This is the START of the game. The opening hint was cryptic. You need to find the mafia.
+This is the START of the game. You need to find the mafia.
+
+🎭 OPENING HINT: "{opening_hint}"
 
 Give a DRAMATIC INTRODUCTORY statement (1-2 sentences) that:
 - Sets your personality tone
 - Shows your investigative mindset
-- Responds to the hint
+- Responds to this specific hint
 - NO accusations yet - there's no conversation to analyze
 
 Speak in FIRST PERSON only. Use "I", "me", "my".

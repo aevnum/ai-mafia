@@ -1,0 +1,121 @@
+================================================================================
+AI MAFIA GAME TRANSCRIPT
+================================================================================
+Generated: 2025-11-02 06:04:04
+Players: 8 (2 Mafia)
+
+PLAYERS:
+--------------------------------------------------------------------------------
+🔵 Aryan - VILLAGER - Messages: 1
+🔵 Navya - VILLAGER - Messages: 1
+🔴 Yatharth - MAFIA - Messages: 2
+🔵 Khushi - VILLAGER - Messages: 6
+🔵 Laavanya - VILLAGER - Messages: 5
+🔵 Kshitij - VILLAGER - Messages: 0
+🔴 Jay - MAFIA - Messages: 0
+🔵 Anushka - VILLAGER - Messages: 1
+
+CONVERSATION:
+================================================================================
+
+[SYSTEM] 🎭 OPENING HINT: Perpetual suspicion is the mafia's best camouflage.
+
+
+[SYSTEM] 💭 Someone among the 8 players is not who they claim to be...
+
+
+[SYSTEM] Players: Aryan, Navya, Yatharth, Khushi, Laavanya, Kshitij, Jay, Anushka
+
+Khushi (VILLAGER):
+  The whispers of perpetual suspicion are just the static on the radio, and I'm tuning into the *real* broadcast, ready to decode the silent signals that betray the hidden players. My mind's a kaleidoscope, and the mafia's camouflage is just another pattern I'm about to shatter.
+
+Aryan (VILLAGER):
+  Alright, listen up, you lot! This "perpetual suspicion" garbage is just a fancy way for the wolves to hide amongst the sheep. I'm not playing games; I'm here to rip the masks off anyone trying to pull a fast one.
+
+Navya (VILLAGER):
+  This "perpetual suspicion" they speak of… it feels like a shield, doesn't it? I'll be watching who hides behind it, and who uses it to cast shadows on others.
+
+Yatharth (MAFIA):
+  I hear everyone talking about suspicion, and I agree it's a tricky game. It's easy to get lost in the static, but we need to focus on who's actually trying to disrupt the town, not just those who seem a little quiet.
+
+Laavanya (VILLAGER):
+  Khushi, your words about "static on the radio" and "silent signals" are very interesting, but I'm trying to understand what actual signals you're picking up. Are you seeing anything specific from anyone so far?
+
+Khushi (VILLAGER):
+  Laavanya, I appreciate you asking for specifics! Right now, I'm still tuning into the frequencies, picking up on the general *tone* and *intensity* of how people are reacting to the idea of suspicion itself. It's the subtle shifts that I'm noting.
+
+Laavanya (VILLAGER):
+  Khushi, I understand you're picking up on subtle shifts, but as a new player, I'm finding it hard to follow. Can you give us an example of a specific subtle shift you've noticed from anyone?
+
+Khushi (VILLAGER):
+  Laavanya, I understand your need for concrete examples, especially as a new player. Right now, the "subtle shifts" are more about the *energy* of the conversation – how quickly certain points are made, or the *way* suspicion is directed. I'm still piecing together the full picture before I make any direct accusations.
+
+Yatharth (MAFIA):
+  Laavanya, I understand wanting concrete examples, and I'm still gathering my thoughts too. My focus remains on identifying actions that genuinely harm the town, rather than just the general mood.
+
+Laavanya (VILLAGER):
+  Khushi, I appreciate you trying to explain, but as a new player, I'm still struggling to grasp what those "subtle shifts" are. Could you perhaps give an example of how suspicion was directed in a certain way, or how quickly a point was made, that felt off to you? I'm trying to learn how to spot these things.
+
+Khushi (VILLAGER):
+  Laavanya, I understand your desire for concrete examples, and I'm still gathering them myself. It's like trying to hear a faint whisper in a crowded room; it takes focus. I'm observing the *patterns* of how quickly people jump to conclusions or deflect when suspicion is raised, rather than just the words themselves.
+
+Laavanya (VILLAGER):
+  Khushi, I'm still trying to learn how to read the game. When you say you're observing the "patterns of how quickly people jump to conclusions or deflect," could you give an example of someone who did that, and what made it feel like a deflection to you? I want to understand what I should be looking for.
+
+Khushi (VILLAGER):
+  Laavanya, I appreciate your eagerness to learn, as do I! Right now, I'm still observing the general flow and how everyone is reacting to the *idea* of suspicion itself. It's still too early to pinpoint specific actions without a clearer picture.
+
+Anushka (VILLAGER):
+  I'm also new here and trying to learn, but Khushi, your explanations about "subtle shifts" and "energy" are still a bit unclear to me. Could you give us a more concrete example of what you're seeing that feels off, rather than just the general idea of suspicion?
+
+Khushi (VILLAGER):
+  Laavanya, I understand you're looking for concrete examples, and your persistence is noted! As a new player myself, I'm focusing on the overall atmosphere and how people are reacting to the *concept* of suspicion. It's still too early for me to single out specific actions without more information.
+
+Laavanya (VILLAGER):
+  Khushi, I really want to understand what you're seeing, but I'm still struggling to get a concrete example from you. When you mention observing "patterns of how quickly people jump to conclusions or deflect," could you give us an example of someone who did that? I want to learn what I should be looking for.
+
+
+[SYSTEM] 🗳️ VOTING TIME! After 20 messages, it's time to vote someone out!
+
+
+[SYSTEM] 🗳️ Aryan voted for Khushi. Reason: I vote for Khushi because I noticed her inability to provide any concrete observations despite repeated questioning, which I find highly suspicious.
+
+
+[SYSTEM] 🗳️ Navya voted for Khushi. Reason: I vote for Khushi because I observed her consistently avoiding providing concrete examples of her suspicions, which makes me question her true intentions.
+
+
+[SYSTEM] 🗳️ Yatharth voted for Khushi. Reason: I suspect Khushi because I noticed her elaborate explanations about "subtle shifts" and "energy" lack any concrete examples, which feels like a tactic to avoid revealing real observations.
+
+
+[SYSTEM] Game stopped.
+
+================================================================================
+END OF TRANSCRIPT
+================================================================================
+
+[ORCHESTRATOR] Added to queue: Laavanya questioned Khushi
+[ORCHESTRATOR] Khushi was accused - giving them defense priority
+[ORCHESTRATOR] Added to queue: Khushi questioned Laavanya
+[ORCHESTRATOR] Laavanya was accused - giving them defense priority
+[ORCHESTRATOR] Added to queue: Laavanya questioned Khushi
+[ORCHESTRATOR] Khushi was accused - giving them defense priority
+Rate limit hit. Waiting 56.2s before retry 1/3...
+[ORCHESTRATOR] 🔄 PING-PONG DETECTED between Khushi and Laavanya - FORCING mediator Yatharth
+[ORCHESTRATOR] Laavanya was accused - giving them defense priority
+[ORCHESTRATOR] Added to queue: Laavanya questioned Khushi
+[ORCHESTRATOR] Khushi was accused - giving them defense priority
+[ORCHESTRATOR] Laavanya was accused - giving them defense priority
+[ORCHESTRATOR] Added to queue: Laavanya questioned Khushi
+[ORCHESTRATOR] Khushi was accused - giving them defense priority
+[ORCHESTRATOR] 🔄 PING-PONG DETECTED between Khushi and Laavanya - FORCING mediator Anushka
+[ORCHESTRATOR] Added to queue: Anushka questioned Khushi
+[ORCHESTRATOR] Khushi was accused - giving them defense priority
+[ORCHESTRATOR] Laavanya was accused - giving them defense priority
+
+[ORCHESTRATOR STATS] Speaking distribution this round:
+  Khushi: 6 messages
+  Laavanya: 5 messages
+  Yatharth: 2 messages
+  Aryan: 1 messages
+  Navya: 1 messages
+  Anushka: 1 messages

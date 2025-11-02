@@ -17,6 +17,8 @@ class Orchestrator:
         self.patience_threshold = 8  # After 8 messages without speaking, force a turn
         self.api_handler = api_handler  # Shared API handler for LLM calls
         self.question_queue = {}  # agent_name -> list of questioners
+        self.last_pingpong_mediator = None  # Track who just mediated
+        self.force_deflection_from = []  # Agents who must deflect away from ping-pong pair
         
     def select_next_speaker(self, agents: List, conversation_history: List[Dict], 
                            eliminated_agents: List[str]) -> Optional[object]:
@@ -33,45 +35,73 @@ class Orchestrator:
         recent_messages = [m for m in conversation_history[-10:] if not m.get('is_system')]
         if not recent_messages:
             return self._pick_random(active_agents)
-        # RULE 0: Detect ping-pong and inject mediator
+        
+        last_speaker = recent_messages[-1].get('agent')
+        last_content = recent_messages[-1].get('content', '')
+        
+        # RULE 0: If mediator just spoke, force next speaker to deflect (avoid ping-pong pair)
+        if self.last_pingpong_mediator and last_speaker == self.last_pingpong_mediator:
+            print(f"[ORCHESTRATOR] 📍 Mediator {self.last_pingpong_mediator} just spoke - forcing deflection away from ping-pong pair")
+            # Pick someone NOT in the ping-pong pair
+            available = [a for a in active_agents if a.name != last_speaker and a.name not in self.force_deflection_from]
+            if available:
+                self.last_pingpong_mediator = None  # Reset for next cycle
+                self.force_deflection_from = []  # Clear deflection list
+                return self._pick_by_patience(available)
+        
+        # RULE 1: Detect ping-pong and inject mediator
         pingpong_agents = self._detect_pingpong(recent_messages, active_agents)
         if pingpong_agents:
             mediator = self._pick_mediator(active_agents, pingpong_agents)
             if mediator:
-                print(f"[ORCHESTRATOR] Ping-pong detected between {pingpong_agents[0].name} and {pingpong_agents[1].name} - injecting mediator {mediator.name}")
+                print(f"[ORCHESTRATOR] 🔄 PING-PONG DETECTED between {pingpong_agents[0].name} and {pingpong_agents[1].name} - FORCING mediator {mediator.name}")
+                self.last_pingpong_mediator = mediator.name  # Remember mediator
+                self.force_deflection_from = [a.name for a in pingpong_agents]  # Remember ping-pong pair
                 return mediator
+        
         # Update question queue from last message
         if recent_messages:
             last_message = recent_messages[-1]
             self._update_question_queue(last_message, active_agents)
-        last_speaker = recent_messages[-1].get('agent')
-        last_content = recent_messages[-1].get('content', '')
-        # RULE 1: If someone was directly accused/mentioned, let them defend
+        
+        # RULE 2: If someone was directly accused/mentioned, let them defend
+        # BUT: Skip if they're part of a ping-pong loop (mediator should break it)
         accused = self._find_accused(last_content, active_agents)
         if accused and accused.name != last_speaker:
-            self._clear_question_queue(accused.name)
-            print(f"[ORCHESTRATOR] {accused.name} was accused - giving them defense priority")
-            return accused
-        # NEW RULE 1.5: Check question queue
+            # Don't give defense priority if they're part of the ping-pong pair
+            if accused.name not in self.force_deflection_from:
+                self._clear_question_queue(accused.name)
+                print(f"[ORCHESTRATOR] {accused.name} was accused - giving them defense priority")
+                return accused
+            else:
+                print(f"[ORCHESTRATOR] {accused.name} was accused but is in ping-pong pair - skipping defense priority")
+        
+        # RULE 3: Check question queue
         agent_with_questions = self._get_agent_with_pending_questions(active_agents)
         if agent_with_questions and agent_with_questions.name != last_speaker:
-            self._clear_question_queue(agent_with_questions.name)
-            print(f"[ORCHESTRATOR] {agent_with_questions.name} has unanswered questions - giving them priority")
-            return agent_with_questions
-        # RULE 2: Check for patience overflow (agent hasn't spoken in too long)
+            # Don't give priority if they're part of the ping-pong pair
+            if agent_with_questions.name not in self.force_deflection_from:
+                self._clear_question_queue(agent_with_questions.name)
+                print(f"[ORCHESTRATOR] {agent_with_questions.name} has unanswered questions - giving them priority")
+                return agent_with_questions
+        
+        # RULE 4: Check for patience overflow (agent hasn't spoken in too long)
         impatient = self._find_impatient_agent(active_agents)
         if impatient:
             print(f"[ORCHESTRATOR] {impatient.name} ran out of patience ({self.agent_patience[impatient.name]} messages)")
             return impatient
-        # RULE 3: Avoid immediate echo (don't let same person speak twice in a row)
+        
+        # RULE 5: Avoid immediate echo (don't let same person speak twice in a row)
         available = [a for a in active_agents if a.name != last_speaker]
-        # RULE 4: Check if conversation is stuck (everyone saying same thing)
+        
+        # RULE 6: Check if conversation is stuck (everyone saying same thing)
         if self._is_echo_chamber(recent_messages, active_agents):
             quiet_agents = self._get_quiet_agents(available, recent_messages)
             if quiet_agents:
                 print(f"[ORCHESTRATOR] Echo chamber detected - picking quiet agent")
                 return self._pick_by_patience(quiet_agents)
-        # RULE 5: Default - pick based on patience (who's been waiting longest)
+        
+        # RULE 7: Default - pick based on patience (who's been waiting longest)
         return self._pick_by_patience(available)
 
     def _detect_pingpong(self, recent_messages: List[Dict], active_agents: List) -> Optional[List]:
@@ -79,18 +109,49 @@ class Orchestrator:
         Detect if same 2 agents are alternating back and forth (ping-pong pattern).
         Returns [agent1, agent2] if detected, None otherwise.
         """
-        if len(recent_messages) < 6:
+        if len(recent_messages) < 4:  # Only check if there are at least 4 messages
             return None
-        speakers = [m['agent'] for m in recent_messages[-8:]]
+
+        # Check last 4 messages
+        check_window = 4
+        speakers = [m['agent'] for m in recent_messages[-check_window:]]
         unique_speakers = set(speakers)
+
+        # If only 2 unique speakers in recent window, that's ping-pong
         if len(unique_speakers) == 2:
             agents_list = list(unique_speakers)
             speaker_counts = {agent: speakers.count(agent) for agent in agents_list}
-            if all(count >= 3 for count in speaker_counts.values()):
+
+            # Both must have spoken exactly 2 times
+            if all(count == 2 for count in speaker_counts.values()):
+                # Verify they're actually alternating (not one speaking consecutively)
+                max_consecutive = self._max_consecutive_speaker(speakers)
+
+                # If someone spoke 2+ times in a row, it's not a real ping-pong
+                if max_consecutive >= 2:
+                    return None
+
                 agent_objs = [a for a in active_agents if a.name in agents_list]
                 if len(agent_objs) == 2:
                     return agent_objs
         return None
+    
+    def _max_consecutive_speaker(self, speakers: List[str]) -> int:
+        """Count maximum consecutive times same speaker appeared"""
+        if not speakers:
+            return 0
+        
+        max_consecutive = 1
+        current_consecutive = 1
+        
+        for i in range(1, len(speakers)):
+            if speakers[i] == speakers[i-1]:
+                current_consecutive += 1
+                max_consecutive = max(max_consecutive, current_consecutive)
+            else:
+                current_consecutive = 1
+        
+        return max_consecutive
 
     def _pick_mediator(self, active_agents: List, pingpong_agents: List) -> Optional[object]:
         """Pick a random agent who is NOT part of the ping-pong loop"""

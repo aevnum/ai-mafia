@@ -266,24 +266,8 @@ else:
                         f'</div>',
                         unsafe_allow_html=True
                     )
-        # Auto-run rounds at the end so conversation shows first
-        if st.session_state.game_running and st.session_state.game.is_running:
-            with st.spinner("Agents thinking..."):
-                try:
-                    round_messages = st.session_state.game.run_round()
-                    if round_messages:
-                        st.session_state.round_count += 1
-                    if not st.session_state.game.is_running:
-                        st.session_state.game_running = False
-                        st.success("🎮 Game ended! Check the conversation for results.")
-                        st.rerun()
-                except Exception as e:
-                    st.warning(f"⚠️ Rate limit or API error. Game will retry automatically.")
-                    print(f"Error in game round: {e}")
-            time.sleep(1)
-            st.rerun()
 
-    # Agents column (always visible, not inside spinner)
+    # Agents column (always visible, rendered before spinner)
     with col2:
         st.subheader("👥 Agents")
         agent_states = st.session_state.game.get_agent_states()
@@ -302,6 +286,22 @@ else:
                 f'</div>',
                 unsafe_allow_html=True
             )
+    
+    # Auto-run rounds AFTER both columns are rendered
+    if st.session_state.game_running and st.session_state.game.is_running:
+        try:
+            round_messages = st.session_state.game.run_round()
+            if round_messages:
+                st.session_state.round_count += 1
+            if not st.session_state.game.is_running:
+                st.session_state.game_running = False
+                st.success("🎮 Game ended! Check the conversation for results.")
+                st.rerun()
+        except Exception as e:
+            st.warning(f"⚠️ Rate limit or API error. Game will retry automatically.")
+            print(f"Error in game round: {e}")
+        time.sleep(0.5)
+        st.rerun()
 
 # Footer
 st.divider()

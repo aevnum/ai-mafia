@@ -34,6 +34,7 @@ class MafiaGame:
         self.agents_spoken_this_round = set()  # Track who has spoken in current round
         self.conversation_reset_index = 0  # ✅ NEW: Track where context should reset
         self.orchestrator = Orchestrator(self.api_handler)  # ✅ NEW
+        self.current_speaker = None  # Track who is currently speaking
         
         self._initialize_agents()
     
@@ -167,6 +168,9 @@ class MafiaGame:
         Process agent's turn (orchestrator already decided they should speak).
         Returns message dict.
         """
+        # Add delay to avoid rate limits (before API call)
+        time.sleep(2)
+        
         # Get current conversation state
         conversation = self.get_conversation_snapshot()
 
@@ -282,6 +286,29 @@ class MafiaGame:
             self.trigger_voting()
             return round_messages
         
+        # If we already have a current speaker, process their turn
+        if self.current_speaker:
+            next_speaker = next((a for a in self.agents if a.name == self.current_speaker), None)
+            if next_speaker:
+                # Check if this is an impatient turn
+                is_impatient = self.orchestrator.is_impatient_turn(next_speaker.name)
+                # Check if this is a mediator turn
+                is_mediator = self.orchestrator.is_mediator_turn(next_speaker.name, self.conversation_history)
+                
+                # Process the selected agent's turn
+                message = self.process_agent_turn(
+                    next_speaker, 
+                    is_impatient_turn=is_impatient,
+                    is_mediator_turn=is_mediator
+                )
+                
+                # Clear current speaker after message is processed
+                self.current_speaker = None
+                
+                if message:
+                    round_messages.append(message)
+                return round_messages
+        
         # ✅ ORCHESTRATOR picks next speaker
         next_speaker = self.orchestrator.select_next_speaker(
             self.agents, 
@@ -292,20 +319,9 @@ class MafiaGame:
         if not next_speaker:
             return round_messages
         
-        # Check if this is an impatient turn
-        is_impatient = self.orchestrator.is_impatient_turn(next_speaker.name)
-        # Check if this is a mediator turn
-        is_mediator = self.orchestrator.is_mediator_turn(next_speaker.name, self.conversation_history)
-        # Add delay to avoid rate limits
-        time.sleep(2)
-        # Process the selected agent's turn
-        message = self.process_agent_turn(
-            next_speaker, 
-            is_impatient_turn=is_impatient,
-            is_mediator_turn=is_mediator
-        )
-        if message:
-            round_messages.append(message)
+        # Set current speaker for UI to display (will be processed on next call)
+        self.current_speaker = next_speaker.name
+        
         return round_messages
     
     def trigger_voting(self):
@@ -657,7 +673,7 @@ Your strategy summary (ONE SENTENCE):"""
             {
                 "name": agent.name,
                 "role": agent.role,
-                "is_typing": agent.is_typing,
+                "is_typing": agent.name == self.current_speaker,
                 "message_count": agent.message_count
             }
             for agent in self.agents
