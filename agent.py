@@ -254,7 +254,10 @@ DO NOT just summarize their argument - add YOUR perspective!
                 prompt = f"""You are {self.name}, a MAFIA member in a Mafia game.
 
 PERSONALITY: {personality_desc}
-SPEAKING STYLE: {self.personality.get('speaking_style', '')}
+
+🗣️ SPEAKING STYLE - YOU MUST USE THIS EXACT STYLE:
+{self.personality.get('speaking_style', '')}
+⚠️ CRITICAL: Your response MUST be written in {self.personality.get('speaking_style', '')}. This is NON-NEGOTIABLE.
 
 🎭 PERSONALITY RULES YOU MUST FOLLOW:
 {personality_rules}
@@ -268,10 +271,11 @@ Give a DRAMATIC INTRODUCTORY statement (1-2 sentences) that:
 - Responds to this specific hint
 - Establishes yourself as "helpful" (but you're secretly mafia)
 - NO accusations yet - there's no conversation to analyze
+- MUST be in {self.personality.get('speaking_style', '')} style
 
 Speak in FIRST PERSON only. Use "I", "me", "my".
 
-Your response:"""
+Your response (in {self.personality.get('speaking_style', '')}):"""
             else:
                 prompt = f"""You are {self.name}, a MAFIA member in a Mafia game.
 
@@ -287,6 +291,14 @@ CURRENT DISCUSSION (post-voting):
 
 ===== YOUR TURN =====
 {impatience_instruction}{mediator_instruction}
+
+🗣️ SPEAKING STYLE - YOU MUST USE THIS EXACT STYLE:
+{self.personality.get('speaking_style', 'Standard')}
+⚠️ CRITICAL: Your <response> section MUST be written in {self.personality.get('speaking_style', 'Standard')}. This is NON-NEGOTIABLE.
+
+🎭 PERSONALITY RULES YOU MUST FOLLOW:
+{personality_rules}
+
 INSTRUCTION: Respond in this EXACT format. Do not deviate:
 
 <reasoning>
@@ -296,14 +308,12 @@ Step 3: Evidence to cite: [specific quote from conversation]
 </reasoning>
 
 <response>
-[Your 1-2 sentence public message, using FIRST PERSON]
+[Your 1-2 sentence public message in {self.personality.get('speaking_style', 'Standard')}, using FIRST PERSON]
 </response>
 
 CRITICAL RULES:
 - Speak in FIRST PERSON ("I noticed..." not "Jay noticed...")
-
-🎭 PERSONALITY RULES YOU MUST FOLLOW:
-{personality_rules}
+- Your <response> MUST use {self.personality.get('speaking_style', 'Standard')} style
 
 Your formatted response:"""
         else:
@@ -312,7 +322,10 @@ Your formatted response:"""
                 prompt = f"""You are {self.name}, a VILLAGER in a Mafia game.
 
 PERSONALITY: {personality_desc}
-SPEAKING STYLE: {self.personality.get('speaking_style', '')}
+
+🗣️ SPEAKING STYLE - YOU MUST USE THIS EXACT STYLE:
+{self.personality.get('speaking_style', '')}
+⚠️ CRITICAL: Your response MUST be written in {self.personality.get('speaking_style', '')}. This is NON-NEGOTIABLE.
 
 🎭 PERSONALITY RULES YOU MUST FOLLOW:
 {personality_rules}
@@ -326,10 +339,11 @@ Give a DRAMATIC INTRODUCTORY statement (1-2 sentences) that:
 - Shows your investigative mindset
 - Responds to this specific hint
 - NO accusations yet - there's no conversation to analyze
+- MUST be in {self.personality.get('speaking_style', '')} style
 
 Speak in FIRST PERSON only. Use "I", "me", "my".
 
-Your response:"""
+Your response (in {self.personality.get('speaking_style', '')}):"""
             else:
                 prompt = f"""You are {self.name}, a VILLAGER in a Mafia game.
 
@@ -340,6 +354,14 @@ CURRENT DISCUSSION (post-voting):
 
 ===== YOUR TURN =====
 {impatience_instruction}{mediator_instruction}
+
+🗣️ SPEAKING STYLE - YOU MUST USE THIS EXACT STYLE:
+{self.personality.get('speaking_style', 'Standard')}
+⚠️ CRITICAL: Your <response> section MUST be written in {self.personality.get('speaking_style', 'Standard')}. This is NON-NEGOTIABLE.
+
+🎭 PERSONALITY RULES YOU MUST FOLLOW:
+{personality_rules}
+
 INSTRUCTION: Respond in this EXACT format. Do not deviate:
 
 <reasoning>
@@ -349,11 +371,12 @@ Step 3: Evidence to cite: [specific quote from conversation]
 </reasoning>
 
 <response>
-[Your 1-2 sentence public message, using FIRST PERSON]
+[Your 1-2 sentence public message in {self.personality.get('speaking_style', 'Standard')}, using FIRST PERSON]
 </response>
 
 CRITICAL RULES:
 - Speak in FIRST PERSON ("I noticed..." not "Jay noticed...")
+- Your <response> MUST use {self.personality.get('speaking_style', 'Standard')} style
 
 Your formatted response:"""
         return prompt
