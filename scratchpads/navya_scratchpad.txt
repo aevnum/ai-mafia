@@ -1,2 +1,4 @@
 - role: villager
   strategy: I focused on demanding concrete evidence and actionable examples from verbose players, cutting through abstract reasoning to expose potential deception.
+- role: villager
+  strategy: I focused on questioning evasive players and those who coordinated to dismiss intuition, aiming to uncover hidden truths through persistent inquiry.

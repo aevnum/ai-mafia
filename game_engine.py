@@ -195,6 +195,10 @@ class MafiaGame:
                 # ✅ Store reasoning for end-game analysis
                 if reasoning:
                     agent.add_reasoning(reasoning)
+                    # 🔍 Log reasoning to console
+                    print(f"\n[{agent.name} REASONING]")
+                    print(f"{reasoning}")
+                    print(f"[PUBLIC MESSAGE] {actual_message if actual_message else 'None'}\n")
 
                 # ✅ Only the actual message goes to conversation
                 if actual_message:
@@ -210,6 +214,9 @@ class MafiaGame:
                     }
                 else:
                     # If no response tag found, use raw output (fallback for opening statements)
+                    print(f"\n[{agent.name} SPEAKING] (No structured reasoning)")
+                    print(f"{response}\n")
+                    
                     self.add_message(agent.name, response)
                     agent.last_speak_time = time.time()
                     agent.message_count += 1

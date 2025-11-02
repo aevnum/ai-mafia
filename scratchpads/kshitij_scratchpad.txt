@@ -1,2 +1,4 @@
 - role: villager
   strategy: I focused on questioning the most evasive suspect's abstract claims by demanding concrete examples to expose their potential deception.
+- role: villager
+  strategy: I deflected suspicion by questioning the motives of those pushing for premature accusations and demanding concrete evidence for abstract claims.

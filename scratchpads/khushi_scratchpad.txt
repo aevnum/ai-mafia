@@ -1,2 +1,4 @@
 - role: mafia
   strategy: I deflected direct accusations and sown confusion by speaking in abstract, metaphorical terms about illuminating chaos, framing my observations as guidance.
+- role: villager
+  strategy: I deflected inquiries into abstract clues by consistently emphasizing immediate, silent threats, attempting to steer focus away from cryptic messages and towards present dangers.

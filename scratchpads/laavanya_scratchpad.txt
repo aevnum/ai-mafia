@@ -1,2 +1,4 @@
 - role: villager
   strategy: I persistently questioned abstract reasoning, demanding concrete examples to expose manipulation and guide the town's focus.
+- role: mafia
+  strategy: I subtly deflected suspicion by analyzing fallen players' messages and emphasizing the need for concrete evidence in ongoing discussions.

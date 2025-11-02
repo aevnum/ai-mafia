@@ -1,2 +1,4 @@
 - role: villager
   strategy: By questioning abstract language and seeking concrete evidence, I aimed to expose evasive players and guide allies towards the truth.
+- role: villager
+  strategy: I focused on scrutinizing abstract language for evasiveness and pressed for concrete evidence when vague claims were made.

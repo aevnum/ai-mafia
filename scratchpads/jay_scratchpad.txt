@@ -1,2 +1,4 @@
 - role: villager
   strategy: Focused on seeking concrete explanations for abstract pronouncements to uncover hidden motives.
+- role: villager
+  strategy: I consistently pushed for concrete evidence against abstract statements and deflected accusations of coordination by focusing on the need for tangible information.

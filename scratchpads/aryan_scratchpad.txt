@@ -1,2 +1,4 @@
 - role: villager
   strategy: I focused on seeking clarification from those employing vague, metaphorical language to expose their true intentions before revealing my own observations.
+- role: villager
+  strategy: Focused on dissecting vague language and persistently questioned evasive speakers to extract concrete evidence.
