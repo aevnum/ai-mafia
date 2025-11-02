@@ -1,0 +1,2 @@
+- role: villager
+  strategy: I focused on seeking clarification from those employing vague, metaphorical language to expose their true intentions before revealing my own observations.

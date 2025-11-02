@@ -217,8 +217,8 @@ DO NOT just summarize their argument - add YOUR perspective!
                     round_summary = msg['content']
                     break
         else:
-            # First round - use recent context
-            relevant_context = conversation_history[-CONVERSATION_CONTEXT_SIZE:]
+            # First round - agents should see EVERYTHING since game just started
+            relevant_context = conversation_history  # No truncation in first round
             round_summary = None
         context_str = self._format_conversation(relevant_context)
         vote_summary = self._format_vote_history(vote_history) if vote_history else "No votes yet."

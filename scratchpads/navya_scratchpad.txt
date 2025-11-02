@@ -1,0 +1,2 @@
+- role: villager
+  strategy: I focused on demanding concrete evidence and actionable examples from verbose players, cutting through abstract reasoning to expose potential deception.

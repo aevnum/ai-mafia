@@ -1,0 +1,2 @@
+- role: villager
+  strategy: Focused on seeking concrete explanations for abstract pronouncements to uncover hidden motives.

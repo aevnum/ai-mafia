@@ -1,0 +1,2 @@
+- role: villager
+  strategy: I persistently questioned abstract reasoning, demanding concrete examples to expose manipulation and guide the town's focus.

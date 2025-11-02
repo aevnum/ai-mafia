@@ -350,69 +350,129 @@ class MafiaGame:
         # Conduct voting
         votes = self.conduct_voting()
         
-        # Determine who gets eliminated
+        # Determine who gets eliminated by vote
+        voted_out_name = None
+        voted_out_agent = None
         if votes:
-            eliminated = max(votes, key=votes.get)
-            eliminated_agent = next((a for a in self.agents if a.name == eliminated), None)
+            voted_out_name = max(votes, key=votes.get)
+            voted_out_agent = next((a for a in self.agents if a.name == voted_out_name), None)
             
-            if eliminated_agent:
-                self.eliminated_agents.append(eliminated)
-                role_reveal = "a MAFIA member" if eliminated_agent.role == "mafia" else "a VILLAGER"
+            if voted_out_agent:
+                self.eliminated_agents.append(voted_out_name)
+                role_reveal = "a MAFIA member" if voted_out_agent.role == "mafia" else "a VILLAGER"
                 
                 self.add_message("System", 
                     f"📊 Voting Results: {', '.join([f'{name}: {count} votes' for name, count in votes.items()])}", 
                     is_system=True)
                 self.add_message("System", 
-                    f"❌ {eliminated} has been eliminated! They were {role_reveal}.", 
+                    f"❌ {voted_out_name} has been eliminated by vote! They were {role_reveal}.", 
                     is_system=True)
-                
-                # NEW: If villager dies, generate will and let mafia edit it
-                if eliminated_agent.role == "villager":
-                    original_will = self.generate_death_will(eliminated_agent)
+        
+        # ✅ NEW: Night kill phase - Mafia kills someone
+        mafia_kill_name = None
+        mafia_kill_agent = None
+        remaining_mafia = [a for a in self.agents 
+                          if a.role == "mafia" and a.name not in self.eliminated_agents]
+        
+        if remaining_mafia:
+            self.add_message("System", "🌙 NIGHT FALLS... The mafia strikes!", is_system=True)
+            mafia_kill_name = self.conduct_mafia_kill(remaining_mafia)
+            
+            if mafia_kill_name:
+                mafia_kill_agent = next((a for a in self.agents if a.name == mafia_kill_name), None)
+                if mafia_kill_agent:
+                    self.eliminated_agents.append(mafia_kill_name)
+                    
+                    # Generate will for mafia's victim
+                    original_will = self.generate_death_will(mafia_kill_agent)
                     self.add_message("System", 
-                        f"📜 {eliminated}'s LAST WILL: \"{original_will}\"", 
+                        f"📜 {mafia_kill_name}'s LAST WILL: \"{original_will}\"", 
                         is_system=True)
                     
-                    # Get remaining mafia to edit the will
-                    remaining_mafia = [a for a in self.agents 
-                                     if a.role == "mafia" and a.name not in self.eliminated_agents]
-                    
-                    if remaining_mafia:
-                        edited_will = self.conduct_will_editing(original_will, remaining_mafia)
-                        if edited_will != original_will:
-                            self.add_message("System", 
-                                f"✏️ WILL EDITED (mafia removed 1 word): \"{edited_will}\"", 
-                                is_system=True)
+                    # Let mafia edit the will
+                    edited_will = self.conduct_will_editing(original_will, remaining_mafia)
+                    if edited_will != original_will:
+                        self.add_message("System", 
+                            f"✏️ WILL EDITED (mafia removed 1 word): \"{edited_will}\"", 
+                            is_system=True)
+        
+        # ✅ Create a summary of what just happened
+        vote_summary = f"📋 ROUND SUMMARY:\n"
+        if voted_out_agent:
+            vote_summary += f"- DAY: {voted_out_name} was eliminated by vote ({('a MAFIA member' if voted_out_agent.role == 'mafia' else 'a VILLAGER')})\n"
+            vote_summary += f"- Vote distribution: {', '.join([f'{name} ({count})' for name, count in sorted(votes.items(), key=lambda x: x[1], reverse=True)])}\n"
+        if mafia_kill_agent:
+            vote_summary += f"- NIGHT: {mafia_kill_name} was killed by the mafia! (was a VILLAGER)\n"
+            vote_summary += f"- Their will hinted: [analyze the will yourself]\n"
+        vote_summary += f"\n🔄 NEW DISCUSSION ROUND - Focus on what we learned!"
+        self.add_message("System", vote_summary, is_system=True)
                 
-                # ✅ NEW: Create a summary of what just happened
-                vote_summary = f"📋 ROUND SUMMARY:\n"
-                vote_summary += f"- {eliminated} was eliminated ({role_reveal})\n"
-                vote_summary += f"- Vote distribution: {', '.join([f'{name} ({count})' for name, count in sorted(votes.items(), key=lambda x: x[1], reverse=True)])}\n"
-                if eliminated_agent.role == "villager":
-                    vote_summary += f"- Their will hinted: [analyze the will yourself]\n"
-                vote_summary += f"\n🔄 NEW DISCUSSION ROUND - Focus on what we learned!"
-                self.add_message("System", vote_summary, is_system=True)
+        # ✅ NEW: Mark this point as context reset boundary
+        self.conversation_reset_index = len(self.conversation_history)
                 
-                # ✅ NEW: Mark this point as context reset boundary
-                self.conversation_reset_index = len(self.conversation_history)
+        # Check win conditions
+        remaining_agents = [a for a in self.agents if a.name not in self.eliminated_agents]
+        mafia_count = sum(1 for a in remaining_agents if a.role == "mafia")
+        villager_count = len(remaining_agents) - mafia_count
                 
-                # Check win conditions
-                remaining_agents = [a for a in self.agents if a.name not in self.eliminated_agents]
-                mafia_count = sum(1 for a in remaining_agents if a.role == "mafia")
-                villager_count = len(remaining_agents) - mafia_count
-                
-                if mafia_count == 0:
-                    self.add_message("System", "🎉 VILLAGERS WIN! All mafia have been eliminated!", is_system=True)
-                    self.stop(winner="villagers")
-                elif mafia_count >= villager_count:
-                    self.add_message("System", "💀 MAFIA WINS! They equal or outnumber the villagers!", is_system=True)
-                    self.stop(winner="mafia")
-                else:
-                    # Update voting counter
-                    non_system_messages = [m for m in self.conversation_history if not m.get('is_system')]
-                    self.last_voting_message_count = len(non_system_messages)
+        if mafia_count == 0:
+            self.add_message("System", "🎉 VILLAGERS WIN! All mafia have been eliminated!", is_system=True)
+            self.stop(winner="villagers")
+        elif mafia_count >= villager_count:
+            self.add_message("System", "💀 MAFIA WINS! They equal or outnumber the villagers!", is_system=True)
+            self.stop(winner="mafia")
+        else:
+            # Update voting counter
+            non_system_messages = [m for m in self.conversation_history if not m.get('is_system')]
+            self.last_voting_message_count = len(non_system_messages)
         
         self.in_voting = False
+    
+    def conduct_mafia_kill(self, mafia_agents: List[Agent]) -> Optional[str]:
+        """Have mafia collectively choose someone to kill during the night phase"""
+        active_agents = [a for a in self.agents if a.name not in self.eliminated_agents]
+        
+        # Mafia can only kill villagers
+        candidates = [a.name for a in active_agents if a.role == "villager"]
+        
+        if not candidates:
+            return None
+        
+        conversation = self.get_conversation_snapshot()
+        recent_context = self._format_conversation(conversation[-20:])
+        
+        # Have the mafia agent(s) decide who to kill
+        for mafia_agent in mafia_agents:
+            kill_prompt = f"""You are {mafia_agent.name}, a MAFIA member. It's night time and you must kill a villager.
+
+Based on the recent conversation, who is the BIGGEST THREAT to you?
+Who is closest to figuring out you're mafia?
+
+ACTIVE VILLAGERS: {', '.join(candidates)}
+
+Recent conversation:
+{recent_context}
+
+CRITICAL: Respond with ONLY the name of who you want to kill (one name, nothing else).
+Choose someone who suspects you or is leading the investigation.
+
+Your target:"""
+            
+            try:
+                time.sleep(2)  # Rate limit protection
+                response = self.api_handler.generate_response(kill_prompt)
+                if response:
+                    # Extract just the name
+                    target = response.strip().strip('"').strip("'")
+                    # Validate it's a valid candidate
+                    for candidate in candidates:
+                        if candidate.lower() in target.lower():
+                            return candidate
+            except Exception as e:
+                print(f"Error in mafia kill decision by {mafia_agent.name}: {e}")
+        
+        # Fallback: random choice
+        return random.choice(candidates) if candidates else None
     
     def conduct_voting(self) -> Dict[str, int]:
         """Have each agent vote for someone to eliminate, using scratchpad observations"""
@@ -538,20 +598,23 @@ Your response:"""
         
         will_prompt = f"""You are {eliminated_agent.name}, a VILLAGER who was just killed by the MAFIA.
 
-    Before you die, you leave a cryptic will with a HINT about who killed you.
-    Based on the conversation, who do you suspect? What was the MAFIA doing?
+Before you die, you leave a will with your SUSPICION about who the mafia is.
+Based on the conversation, who do you suspect? What patterns did you notice?
 
-    CRITICAL: Write in FIRST PERSON. Use \"I saw...\", \"I noticed...\", \"I believe...\"
+CRITICAL: Write in FIRST PERSON. Use \"I saw...\", \"I noticed...\", \"I believe...\"
 
-    Write EXACTLY ONE cryptic sentence (max 20 words) that hints at the mafia.
+Be SPECIFIC - mention names and behaviors that seemed suspicious.
+Write ONE sentence (15-25 words) that reveals your suspicion.
 
-    GOOD: \"I saw the pattern in how they deflected my discord question\"
-    BAD: Long paragraphs explaining everything
+GOOD RULES OF THUMB:
+- Mention specific actions or statements by other players
+- Reference voting patterns or alliances you observed
+- Avoid vague statements like "I think someone is suspicious"
 
-    Recent conversation:
-    {recent_context}
+Recent conversation:
+{recent_context}
 
-    Your will (ONE SENTENCE, MAX 20 WORDS):"""
+Your will (ONE SENTENCE, 15-25 WORDS, BE SPECIFIC):"""
 
         try:
             time.sleep(2)  # Rate limit protection
@@ -565,13 +628,17 @@ Your response:"""
         """Allow mafia to remove one word from the will to obfuscate it"""
         editing_prompt = f"""You are a MAFIA member who just killed someone.
 
-The victim left this cryptic will: "{original_will}"
+The victim left this will: "{original_will}"
 
-You get to remove ONE word to make the hint less clear. 
+You get to remove ONE word to make the accusation less clear.
 Which word should you remove to best protect yourself or your allies?
-The removed word should be one that reveals strategy or points fingers.
 
-Respond with ONLY the word you want removed, nothing else."""
+STRATEGY:
+- Remove names to hide identity
+- Remove specific behaviors that reveal your tactics
+- Remove evidence words like "saw", "noticed", "believe" to weaken the claim
+
+Respond with ONLY the word you want removed (just the word, nothing else)."""
 
         removed_word = None
         for agent in mafia_agents:
@@ -580,18 +647,21 @@ Respond with ONLY the word you want removed, nothing else."""
                     time.sleep(2)  # Rate limit protection
                     response = self.api_handler.generate_response(editing_prompt)
                     if response:
-                        removed_word = response.strip().strip('"').strip("'").lower()
+                        removed_word = response.strip().strip('"').strip("'").strip('.,!?').lower()
                         break
                 except Exception as e:
                     print(f"Error in will editing by {agent.name}: {e}")
         
         if removed_word:
-            # Remove first occurrence of the word
-            words = original_will.lower().split()
-            if removed_word in words:
-                idx = words.index(removed_word)
-                new_will = " ".join(original_will.split()[:idx] + original_will.split()[idx+1:])
-                return new_will
+            # Remove first occurrence of the word (case-insensitive)
+            words = original_will.split()
+            for i, word in enumerate(words):
+                # Clean the word of punctuation for comparison
+                clean_word = word.strip('.,!?"\'-').lower()
+                if clean_word == removed_word:
+                    # Remove the word but keep the punctuation structure
+                    new_will = " ".join(words[:i] + words[i+1:])
+                    return new_will
         
         return original_will
     

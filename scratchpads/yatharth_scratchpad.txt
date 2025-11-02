@@ -1,0 +1,2 @@
+- role: villager
+  strategy: I focused on seeking concrete evidence by probing abstract claims, ultimately exposing deception through direct questioning.

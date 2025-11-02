@@ -28,7 +28,7 @@ GROK_CONFIG = {
 
 # Game Settings
 DEFAULT_NUM_AGENTS = 8
-DEFAULT_NUM_MAFIA = 2
+DEFAULT_NUM_MAFIA = 1
 MIN_SPEAK_INTERVAL = 3  # Minimum seconds between agent messages
 CONVERSATION_CONTEXT_SIZE = 40  # Number of recent messages agents see when speaking
 VOTING_CONTEXT_SIZE = 50  # Number of recent messages agents see during voting

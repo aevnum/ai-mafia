@@ -1,0 +1,2 @@
+- role: mafia
+  strategy: I deflected direct accusations and sown confusion by speaking in abstract, metaphorical terms about illuminating chaos, framing my observations as guidance.

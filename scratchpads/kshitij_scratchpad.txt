@@ -1,0 +1,2 @@
+- role: villager
+  strategy: I focused on questioning the most evasive suspect's abstract claims by demanding concrete examples to expose their potential deception.
